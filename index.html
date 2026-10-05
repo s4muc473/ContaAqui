@@ -789,18 +789,47 @@
       color: #92400e;
     }
 
-    /* ===== GRÁFICO DE SALDO (evolução) ===== */
-    .balance-chart-wrap {
+    /* ===== GRÁFICO DE SALDO MENSAL (barras com scroll) ===== */
+    .balance-chart-scroll-wrap {
       position: relative;
       width: 100%;
-      height: 280px;
-      min-height: 280px;
+      overflow-x: auto;
+      overflow-y: hidden;
+      -webkit-overflow-scrolling: touch;
+      border-radius: 20px;
+      background: #fafcff;
+      border: 1px solid #eef2f6;
+      padding: 10px 6px;
+      scrollbar-width: thin;
     }
 
-    .balance-chart-wrap canvas {
-      width: 100% !important;
-      height: 280px !important;
-      max-height: 280px;
+    .balance-chart-scroll-wrap::-webkit-scrollbar {
+      height: 8px;
+    }
+
+    .balance-chart-scroll-wrap::-webkit-scrollbar-track {
+      background: #f1f5f9;
+      border-radius: 10px;
+    }
+
+    .balance-chart-scroll-wrap::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 10px;
+    }
+
+    .balance-chart-scroll-wrap::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+
+    .balance-chart-inner {
+      position: relative;
+      height: 260px;
+      min-height: 260px;
+    }
+
+    .balance-chart-inner canvas {
+      height: 260px !important;
+      max-height: 260px;
     }
 
     .balance-summary {
@@ -1123,6 +1152,13 @@
         const date = new Date(parseInt(y), parseInt(m) - 1, 1);
         const label = date.toLocaleString('pt-BR', { month: 'long', year: 'numeric' });
         return label.charAt(0).toUpperCase() + label.slice(1);
+      }
+
+      function formatMonthShort(cycleKey) {
+        const [y, m] = cycleKey.split('-');
+        const date = new Date(parseInt(y), parseInt(m) - 1, 1);
+        const label = date.toLocaleString('pt-BR', { month: 'short' });
+        return label.replace('.', '') + '/' + String(y).slice(2);
       }
 
       // ---------- TOAST ----------
@@ -1472,11 +1508,12 @@
         });
         Object.values(cycles).forEach(c => {
           c.economia = Math.max(0, c.economia - c.gastos);
+          // Saldo mensal = entradas reais - saídas reais (gastos efetivos)
           c.saldo = c.entradas - c.gastos;
         });
         let sorted = Object.values(cycles).sort((a, b) => a.name.localeCompare(b.name));
         sorted = sorted.filter(c => c.entradas > 0 || c.gastos > 0 || c.crescimento > 0 || c.resgates > 0 || c.economia > 0);
-        if (sorted.length > 12) sorted = sorted.slice(-12);
+        // Remove o limite de 12 meses para permitir scroll lateral com todos
         return sorted;
       }
 
@@ -1528,7 +1565,7 @@
         });
       }
 
-      // ---------- FILTRO DE MÊS + GRÁFICOS DE FLUXO MENSAL ----------
+      // ---------- FILTRO DE MÊS ----------
       function renderMonthFilter() {
         const select = document.getElementById('monthFilter');
         if (!select) return;
@@ -1548,7 +1585,6 @@
           select.value = currentValue;
           selectedMonth = currentValue;
         } else if (data.length > 0) {
-          // Seleciona o mês mais recente por padrão
           select.value = data[data.length - 1].name;
           selectedMonth = data[data.length - 1].name;
         } else {
@@ -1575,7 +1611,7 @@
 
         container.innerHTML = '';
 
-        // Bloco do gráfico de fluxo mensal
+        // Bloco do gráfico de fluxo mensal (mês selecionado)
         const fluxBlock = document.createElement('div');
         fluxBlock.className = 'month-report-block';
         fluxBlock.innerHTML = `
@@ -1639,71 +1675,78 @@
           }
         });
 
-        // Bloco do gráfico de evolução do saldo (positivo/negativo)
+        // Bloco do gráfico de saldo mensal (barras azuis/vermelhas com scroll)
         const balanceBlock = document.createElement('div');
         balanceBlock.className = 'month-report-block';
         balanceBlock.style.marginTop = '18px';
         balanceBlock.innerHTML = `
           <div class="month-report-header">
-            <h4><i class="fas fa-chart-line" style="color:#dc2626;"></i> Evolução do Saldo</h4>
+            <h4><i class="fas fa-chart-bar" style="color:#2563eb;"></i> Saldo Mensal (Positivo / Negativo)</h4>
           </div>
-          <div class="balance-chart-wrap">
-            <canvas id="balanceEvolutionChart"></canvas>
+          <div class="balance-chart-scroll-wrap" id="balanceScrollWrap">
+            <div class="balance-chart-inner" id="balanceChartInner">
+              <canvas id="balanceBarsChart"></canvas>
+            </div>
           </div>
           <div class="balance-summary" id="balanceSummary"></div>
         `;
         container.appendChild(balanceBlock);
 
-        renderBalanceEvolutionChart(data);
+        renderBalanceBarsChart(data);
       }
 
-      function renderBalanceEvolutionChart(data) {
-        const ctx = document.getElementById('balanceEvolutionChart');
-        if (!ctx) return;
+      function renderBalanceBarsChart(data) {
+        const canvas = document.getElementById('balanceBarsChart');
+        const inner = document.getElementById('balanceChartInner');
+        if (!canvas || !inner) return;
 
-        // Acumula o saldo ao longo dos meses
-        let accumulated = 0;
-        const balances = data.map(d => {
-          accumulated += d.saldo;
-          return accumulated;
-        });
+        // Largura fixa por barra para que sempre fiquem do mesmo tamanho
+        const barWidth = 42;         // largura de cada "slot" de barra em px
+        const minWidth = 280;        // largura mínima do container
+        const totalWidth = Math.max(minWidth, data.length * barWidth + 60);
 
-        const labels = data.map(d => formatMonthLabel(d.name));
+        // Ajusta a largura do container interno para forçar o scroll
+        inner.style.width = totalWidth + 'px';
+        canvas.style.width = totalWidth + 'px';
+        canvas.style.height = '260px';
+        canvas.style.maxHeight = '260px';
 
-        if (chartInstances['balanceEvolutionChart']) chartInstances['balanceEvolutionChart'].destroy();
-        chartInstances['balanceEvolutionChart'] = new Chart(ctx.getContext('2d'), {
-          type: 'line',
+        const labels = data.map(d => formatMonthShort(d.name));
+        const saldos = data.map(d => d.saldo);
+        const colors = saldos.map(s => s >= 0 ? '#2563eb' : '#dc2626');
+
+        if (chartInstances['balanceBarsChart']) chartInstances['balanceBarsChart'].destroy();
+        chartInstances['balanceBarsChart'] = new Chart(canvas.getContext('2d'), {
+          type: 'bar',
           data: {
             labels,
             datasets: [{
-              label: 'Saldo acumulado',
-              data: balances,
-              borderColor: '#dc2626',
-              backgroundColor: 'rgba(220, 38, 38, 0.08)',
-              borderWidth: 2.5,
-              pointBackgroundColor: balances.map(b => b >= 0 ? '#10b981' : '#dc2626'),
-              pointBorderColor: '#ffffff',
-              pointBorderWidth: 1.5,
-              pointRadius: 4,
-              pointHoverRadius: 6,
-              fill: true,
-              tension: 0.25,
+              label: 'Saldo mensal',
+              data: saldos,
+              backgroundColor: colors,
+              borderRadius: 3,
+              barPercentage: 0.7,
+              categoryPercentage: 0.8,
             }]
           },
           options: {
-            responsive: true,
+            responsive: false,
             maintainAspectRatio: false,
+            animation: { duration: 300 },
             plugins: {
               legend: { display: false },
               tooltip: {
                 callbacks: {
+                  title: function(items) {
+                    const idx = items[0].dataIndex;
+                    return formatMonthLabel(data[idx].name);
+                  },
                   label: function(context) {
                     const v = context.raw;
-                    return (v >= 0 ? '+' : '') + formatCurrency(v);
+                    return 'Saldo: ' + (v >= 0 ? '+' : '') + formatCurrency(v);
                   }
                 }
-              },
-              annotation: false
+              }
             },
             scales: {
               y: {
@@ -1726,31 +1769,46 @@
               },
               x: {
                 grid: { display: false },
-                ticks: { font: { size: 9 }, maxRotation: 45, minRotation: 45 }
+                ticks: {
+                  font: { size: 10, weight: '600' },
+                  maxRotation: 0,
+                  minRotation: 0,
+                  autoSkip: false,
+                }
               }
             }
           }
         });
 
-        // Resumo abaixo do gráfico
+        // Resumo
         const summaryEl = document.getElementById('balanceSummary');
         if (summaryEl) {
-          const lastBalance = balances[balances.length - 1] || 0;
-          const maxBalance = Math.max(...balances, 0);
-          const minBalance = Math.min(...balances, 0);
+          const totalSaldo = saldos.reduce((a, b) => a + b, 0);
+          const positivos = saldos.filter(s => s > 0).length;
+          const negativos = saldos.filter(s => s < 0).length;
+          const melhorMes = data[saldos.indexOf(Math.max(...saldos))];
+          const piorMes = data[saldos.indexOf(Math.min(...saldos))];
 
           summaryEl.innerHTML = `
             <div class="item">
-              <span class="lbl">Saldo atual</span>
-              <span class="vl ${lastBalance >= 0 ? 'pos' : 'neg'}">${lastBalance >= 0 ? '+' : ''}${formatCurrency(lastBalance)}</span>
+              <span class="lbl">Saldo total</span>
+              <span class="vl ${totalSaldo >= 0 ? 'pos' : 'neg'}">${totalSaldo >= 0 ? '+' : ''}${formatCurrency(totalSaldo)}</span>
             </div>
             <div class="item">
-              <span class="lbl">Maior saldo</span>
-              <span class="vl pos">+${formatCurrency(maxBalance)}</span>
+              <span class="lbl">Meses +</span>
+              <span class="vl pos">${positivos}</span>
             </div>
             <div class="item">
-              <span class="lbl">Menor saldo</span>
-              <span class="vl ${minBalance < 0 ? 'neg' : 'pos'}">${minBalance >= 0 ? '+' : ''}${formatCurrency(minBalance)}</span>
+              <span class="lbl">Meses −</span>
+              <span class="vl neg">${negativos}</span>
+            </div>
+            <div class="item">
+              <span class="lbl">Melhor</span>
+              <span class="vl pos">${formatMonthShort(melhorMes.name)}</span>
+            </div>
+            <div class="item">
+              <span class="lbl">Pior</span>
+              <span class="vl neg">${formatMonthShort(piorMes.name)}</span>
             </div>
           `;
         }
