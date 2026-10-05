@@ -1078,6 +1078,9 @@
         <input id="modalEditBudgetName" placeholder="Nome">
         <input id="modalEditBudgetColor" placeholder="Cor (hex)" value="#3b82f6">
         <input type="number" id="modalEditBudgetSetBalance" placeholder="Definir saldo manual (R$)" step="0.01">
+        <p style="font-size:11px; color:#64748b; margin-top:-8px; margin-bottom:12px; line-height:1.4;">
+          <i class="fas fa-info-circle"></i> A alteração do saldo é apenas uma correção e <strong>não afeta o histórico nem os gráficos</strong>.
+        </p>
         <div class="modal-actions">
           <button id="modalEditBudgetCancel">Cancelar</button>
           <button id="modalEditBudgetDelete" class="danger"><i class="fas fa-trash"></i> Excluir</button>
@@ -1371,7 +1374,10 @@
         const container = document.getElementById('historyList');
         container.innerHTML = '';
         const filter = document.querySelector('#tabHistory .active-filter')?.dataset.filter || 'all';
-        let list = [...state.transactions].sort((a, b) => new Date(b.date) - new Date(a.date));
+        // Ignora transações do tipo AJUSTE (não aparecem no histórico)
+        let list = state.transactions
+          .filter(t => t.type !== 'ADJUSTMENT')
+          .sort((a, b) => new Date(b.date) - new Date(a.date));
         if (filter !== 'all') list = list.filter(t => t.type === filter);
         if (list.length === 0) {
           container.innerHTML = '<div style="padding:20px; text-align:center; color:#94a3b8;"><i class="fas fa-inbox"></i> Nenhuma transação</div>';
@@ -1494,6 +1500,9 @@
       function buildMonthlyData() {
         const cycles = {};
         state.transactions.forEach(t => {
+          // Ignora ajustes manuais — eles não afetam o fluxo
+          if (t.type === 'ADJUSTMENT') return;
+
           const cycle = getFinancialCycle(new Date(t.date));
           if (!cycles[cycle]) {
             cycles[cycle] = { name: cycle, entradas: 0, gastos: 0, crescimento: 0, resgates: 0, economia: 0, saldo: 0 };
@@ -1508,12 +1517,11 @@
         });
         Object.values(cycles).forEach(c => {
           c.economia = Math.max(0, c.economia - c.gastos);
-          // Saldo mensal = entradas reais - saídas reais (gastos efetivos)
+          // Saldo mensal = entradas reais - saídas reais
           c.saldo = c.entradas - c.gastos;
         });
         let sorted = Object.values(cycles).sort((a, b) => a.name.localeCompare(b.name));
         sorted = sorted.filter(c => c.entradas > 0 || c.gastos > 0 || c.crescimento > 0 || c.resgates > 0 || c.economia > 0);
-        // Remove o limite de 12 meses para permitir scroll lateral com todos
         return sorted;
       }
 
@@ -1611,7 +1619,6 @@
 
         container.innerHTML = '';
 
-        // Bloco do gráfico de fluxo mensal (mês selecionado)
         const fluxBlock = document.createElement('div');
         fluxBlock.className = 'month-report-block';
         fluxBlock.innerHTML = `
@@ -1675,7 +1682,6 @@
           }
         });
 
-        // Bloco do gráfico de saldo mensal (barras azuis/vermelhas com scroll)
         const balanceBlock = document.createElement('div');
         balanceBlock.className = 'month-report-block';
         balanceBlock.style.marginTop = '18px';
@@ -1700,12 +1706,10 @@
         const inner = document.getElementById('balanceChartInner');
         if (!canvas || !inner) return;
 
-        // Largura fixa por barra para que sempre fiquem do mesmo tamanho
-        const barWidth = 42;         // largura de cada "slot" de barra em px
-        const minWidth = 280;        // largura mínima do container
+        const barWidth = 42;
+        const minWidth = 280;
         const totalWidth = Math.max(minWidth, data.length * barWidth + 60);
 
-        // Ajusta a largura do container interno para forçar o scroll
         inner.style.width = totalWidth + 'px';
         canvas.style.width = totalWidth + 'px';
         canvas.style.height = '260px';
@@ -1780,7 +1784,6 @@
           }
         });
 
-        // Resumo
         const summaryEl = document.getElementById('balanceSummary');
         if (summaryEl) {
           const totalSaldo = saldos.reduce((a, b) => a + b, 0);
@@ -1971,26 +1974,16 @@
         if (newName) budget.name = newName;
         if (newColor) budget.color = newColor;
 
+        // ⚠️ CORREÇÃO: alterar o saldo manual NÃO gera transação.
+        // Isso é apenas um ajuste de correção, não afeta fluxo, histórico ou gráficos.
         if (!isNaN(setBalance) && setBalance >= 0) {
-          const diff = setBalance - budget.currentBalance;
           budget.currentBalance = setBalance;
-          if (Math.abs(diff) > 0.01) {
-            state.transactions.push({
-              id: generateId(),
-              amount: Math.abs(diff),
-              date: new Date().toISOString(),
-              type: diff > 0 ? 'ALLOCATION' : 'EXPENSE',
-              description: diff > 0 ? `Ajuste manual +${formatCurrency(diff)}` : `Ajuste manual -${formatCurrency(Math.abs(diff))}`,
-              toId: diff > 0 ? budget.id : undefined,
-              fromId: diff < 0 ? budget.id : undefined,
-            });
-          }
         }
 
         document.getElementById('modalEditBudget').classList.remove('open');
         editingBudgetId = null;
         renderAll();
-        showToast('Orçamento atualizado!');
+        showToast('Orçamento atualizado (correção manual, sem afetar o fluxo).');
       });
 
       let rescueBudgetTargetId = null;
