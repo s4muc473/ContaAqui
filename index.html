@@ -862,6 +862,112 @@
 
     .balance-summary .item .vl.pos { color: #0b7b4a; }
     .balance-summary .item .vl.neg { color: #b91c1c; }
+
+    /* ===== GRÁFICO DE CATEGORIAS (rolável) ===== */
+    .categories-chart-scroll-wrap {
+      position: relative;
+      width: 100%;
+      overflow-x: auto;
+      overflow-y: hidden;
+      -webkit-overflow-scrolling: touch;
+      border-radius: 20px;
+      background: #fafcff;
+      border: 1px solid #eef2f6;
+      padding: 10px 6px;
+      scrollbar-width: thin;
+    }
+
+    .categories-chart-scroll-wrap::-webkit-scrollbar {
+      height: 8px;
+    }
+
+    .categories-chart-scroll-wrap::-webkit-scrollbar-track {
+      background: #f1f5f9;
+      border-radius: 10px;
+    }
+
+    .categories-chart-scroll-wrap::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 10px;
+    }
+
+    .categories-chart-scroll-wrap::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+
+    .categories-chart-inner {
+      position: relative;
+      height: 260px;
+      min-height: 260px;
+    }
+
+    .categories-chart-inner canvas {
+      height: 260px !important;
+      max-height: 260px;
+    }
+
+    .categories-summary {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid #f1f5f9;
+      font-size: 13px;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .categories-summary .item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      min-width: 60px;
+    }
+
+    .categories-summary .item .lbl {
+      color: #64748b;
+      font-size: 11px;
+      font-weight: 500;
+    }
+
+    .categories-summary .item .vl {
+      font-weight: 700;
+      font-size: 14px;
+    }
+
+    .categories-summary .item .vl.pos { color: #0b7b4a; }
+    .categories-summary .item .vl.neg { color: #b91c1c; }
+
+    /* Toggle Entradas/Saídas no gráfico de categorias */
+    .cat-type-toggle {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+
+    .cat-type-toggle button {
+      flex: 1;
+      background: #f1f5f9;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 60px;
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+      transition: 0.15s;
+      color: #475569;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .cat-type-toggle button.active {
+      background: #0b1a2a;
+      color: white;
+    }
   </style>
 </head>
 
@@ -1122,6 +1228,7 @@
       let chartInstances = {};
       let editingBudgetId = null;
       let selectedMonth = '';
+      let selectedCategoryType = 'EXPENSE'; // 'ENTRY' ou 'EXPENSE'
 
       function generateId() { return Math.random().toString(36).substring(2, 10) + Date.now().toString(36); }
       function formatCurrency(v) { return 'R$ ' + Number(v).toFixed(2).replace('.', ','); }
@@ -1374,7 +1481,6 @@
         const container = document.getElementById('historyList');
         container.innerHTML = '';
         const filter = document.querySelector('#tabHistory .active-filter')?.dataset.filter || 'all';
-        // Ignora transações do tipo AJUSTE (não aparecem no histórico)
         let list = state.transactions
           .filter(t => t.type !== 'ADJUSTMENT')
           .sort((a, b) => new Date(b.date) - new Date(a.date));
@@ -1500,7 +1606,6 @@
       function buildMonthlyData() {
         const cycles = {};
         state.transactions.forEach(t => {
-          // Ignora ajustes manuais — eles não afetam o fluxo
           if (t.type === 'ADJUSTMENT') return;
 
           const cycle = getFinancialCycle(new Date(t.date));
@@ -1517,12 +1622,37 @@
         });
         Object.values(cycles).forEach(c => {
           c.economia = Math.max(0, c.economia - c.gastos);
-          // Saldo mensal = entradas reais - saídas reais
           c.saldo = c.entradas - c.gastos;
         });
         let sorted = Object.values(cycles).sort((a, b) => a.name.localeCompare(b.name));
         sorted = sorted.filter(c => c.entradas > 0 || c.gastos > 0 || c.crescimento > 0 || c.resgates > 0 || c.economia > 0);
         return sorted;
+      }
+
+      // Constrói os totais por categoria para um mês específico
+      function buildCategoryTotals(monthKey, type) {
+        // type: 'ENTRY' ou 'EXPENSE'
+        const totals = {};
+        state.transactions.forEach(t => {
+          if (t.type !== type) return;
+          if (getFinancialCycle(new Date(t.date)) !== monthKey) return;
+          const catId = t.categoryId || '__none__';
+          if (!totals[catId]) totals[catId] = 0;
+          totals[catId] += t.amount;
+        });
+
+        // Converte para array ordenado decrescente
+        const list = Object.keys(totals).map(catId => {
+          const cat = catId === '__none__' ? null : getCategoryById(catId);
+          return {
+            id: catId,
+            name: cat ? cat.name : 'Sem categoria',
+            color: cat ? cat.color : '#94a3b8',
+            total: totals[catId],
+          };
+        }).sort((a, b) => b.total - a.total);
+
+        return list;
       }
 
       function renderAllCharts() {
@@ -1619,6 +1749,7 @@
 
         container.innerHTML = '';
 
+        // 1) Bloco do fluxo mensal (entradas vs saídas)
         const fluxBlock = document.createElement('div');
         fluxBlock.className = 'month-report-block';
         fluxBlock.innerHTML = `
@@ -1682,6 +1813,7 @@
           }
         });
 
+        // 2) Bloco de saldo mensal (barras azuis/vermelhas com scroll)
         const balanceBlock = document.createElement('div');
         balanceBlock.className = 'month-report-block';
         balanceBlock.style.marginTop = '18px';
@@ -1699,6 +1831,157 @@
         container.appendChild(balanceBlock);
 
         renderBalanceBarsChart(data);
+
+        // 3) Bloco de categorias (rolável, com toggle Entradas/Saídas)
+        const categoriesBlock = document.createElement('div');
+        categoriesBlock.className = 'month-report-block';
+        categoriesBlock.style.marginTop = '18px';
+        categoriesBlock.innerHTML = `
+          <div class="month-report-header">
+            <h4><i class="fas fa-tags" style="color:#7c3aed;"></i> Valores por Categoria — ${formatMonthLabel(monthData.name)}</h4>
+          </div>
+          <div class="cat-type-toggle" id="catTypeToggle">
+            <button data-type="EXPENSE" class="${selectedCategoryType === 'EXPENSE' ? 'active' : ''}"><i class="fas fa-arrow-up"></i> Saídas</button>
+            <button data-type="ENTRY" class="${selectedCategoryType === 'ENTRY' ? 'active' : ''}"><i class="fas fa-arrow-down"></i> Entradas</button>
+          </div>
+          <div class="categories-chart-scroll-wrap" id="categoriesScrollWrap">
+            <div class="categories-chart-inner" id="categoriesChartInner">
+              <canvas id="categoriesChart"></canvas>
+            </div>
+          </div>
+          <div class="categories-summary" id="categoriesSummary"></div>
+        `;
+        container.appendChild(categoriesBlock);
+
+        // Event listeners do toggle
+        document.querySelectorAll('#catTypeToggle button').forEach(btn => {
+          btn.addEventListener('click', () => {
+            selectedCategoryType = btn.dataset.type;
+            document.querySelectorAll('#catTypeToggle button').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            renderCategoriesChart();
+          });
+        });
+
+        renderCategoriesChart();
+      }
+
+      // ---------- GRÁFICO DE CATEGORIAS (rolável) ----------
+      function renderCategoriesChart() {
+        const canvas = document.getElementById('categoriesChart');
+        const inner = document.getElementById('categoriesChartInner');
+        if (!canvas || !inner || !selectedMonth) return;
+
+        const totals = buildCategoryTotals(selectedMonth, selectedCategoryType);
+
+        if (totals.length === 0) {
+          inner.style.width = '100%';
+          canvas.style.width = '100%';
+          canvas.style.height = '120px';
+          canvas.style.maxHeight = '120px';
+          if (chartInstances['categoriesChart']) chartInstances['categoriesChart'].destroy();
+          // Mostra mensagem vazia
+          const summaryEl = document.getElementById('categoriesSummary');
+          if (summaryEl) {
+            summaryEl.innerHTML = `<div style="width:100%; text-align:center; color:#94a3b8; padding:20px; font-size:13px;">
+              <i class="fas fa-inbox"></i> Nenhuma ${selectedCategoryType === 'ENTRY' ? 'entrada' : 'saída'} categorizada neste mês.
+            </div>`;
+          }
+          return;
+        }
+
+        // Largura fixa por barra (categoria) para scroll horizontal
+        const barWidth = 60;
+        const minWidth = 280;
+        const totalWidth = Math.max(minWidth, totals.length * barWidth + 60);
+
+        inner.style.width = totalWidth + 'px';
+        canvas.style.width = totalWidth + 'px';
+        canvas.style.height = '260px';
+        canvas.style.maxHeight = '260px';
+
+        const labels = totals.map(t => t.name);
+        const values = totals.map(t => t.total);
+        const colors = totals.map(t => t.color);
+
+        if (chartInstances['categoriesChart']) chartInstances['categoriesChart'].destroy();
+        chartInstances['categoriesChart'] = new Chart(canvas.getContext('2d'), {
+          type: 'bar',
+          data: {
+            labels,
+            datasets: [{
+              label: selectedCategoryType === 'ENTRY' ? 'Entradas' : 'Saídas',
+              data: values,
+              backgroundColor: colors,
+              borderRadius: 4,
+              barPercentage: 0.7,
+              categoryPercentage: 0.8,
+            }]
+          },
+          options: {
+            responsive: false,
+            maintainAspectRatio: false,
+            animation: { duration: 300 },
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                callbacks: {
+                  title: function(items) {
+                    return items[0].label;
+                  },
+                  label: function(context) {
+                    return (selectedCategoryType === 'ENTRY' ? '+' : '−') + formatCurrency(context.raw);
+                  }
+                }
+              }
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+                grid: { color: '#f1f5f9' },
+                ticks: {
+                  font: { size: 10 },
+                  callback: function(value) {
+                    return 'R$ ' + value.toFixed(0);
+                  }
+                }
+              },
+              x: {
+                grid: { display: false },
+                ticks: {
+                  font: { size: 10, weight: '600' },
+                  maxRotation: 45,
+                  minRotation: 45,
+                  autoSkip: false,
+                }
+              }
+            }
+          }
+        });
+
+        // Resumo
+        const summaryEl = document.getElementById('categoriesSummary');
+        if (summaryEl) {
+          const total = values.reduce((a, b) => a + b, 0);
+          const top = totals[0];
+          const qtd = totals.length;
+          const isEntry = selectedCategoryType === 'ENTRY';
+
+          summaryEl.innerHTML = `
+            <div class="item">
+              <span class="lbl">Total</span>
+              <span class="vl ${isEntry ? 'pos' : 'neg'}">${isEntry ? '+' : '−'}${formatCurrency(total)}</span>
+            </div>
+            <div class="item">
+              <span class="lbl">Categorias</span>
+              <span class="vl">${qtd}</span>
+            </div>
+            <div class="item" style="min-width:120px;">
+              <span class="lbl">Maior</span>
+              <span class="vl ${isEntry ? 'pos' : 'neg'}" style="font-size:12px;">${top.name}: ${formatCurrency(top.total)}</span>
+            </div>
+          `;
+        }
       }
 
       function renderBalanceBarsChart(data) {
@@ -1974,8 +2257,6 @@
         if (newName) budget.name = newName;
         if (newColor) budget.color = newColor;
 
-        // ⚠️ CORREÇÃO: alterar o saldo manual NÃO gera transação.
-        // Isso é apenas um ajuste de correção, não afeta fluxo, histórico ou gráficos.
         if (!isNaN(setBalance) && setBalance >= 0) {
           budget.currentBalance = setBalance;
         }
