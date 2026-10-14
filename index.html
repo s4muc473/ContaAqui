@@ -189,7 +189,6 @@
       z-index:1000;padding:20px;
     }
     .modal-mask.open{display:flex}
-    /* [NOVO] Quando o modal de edição de transação é aberto por cima do modal do mês, sobe o z-index */
     .modal-mask.top-modal{z-index:1200}
     .modal-box{
       background:var(--surface);width:100%;max-width:400px;border-radius:var(--radius);
@@ -439,7 +438,6 @@
     .mes-edit-acoes button:hover{background:var(--accent-soft);color:var(--accent)}
     .mes-edit-vazio{padding:20px;text-align:center;color:var(--muted);font-size:13px}
 
-    /* [NOVO] Card de criação histórica no modal do mês */
     .mes-add-card{
       border:1px dashed var(--line);border-radius:var(--radius-sm);
       padding:12px;margin-bottom:10px;background:var(--sunk);
@@ -709,11 +707,10 @@
       </div>
     </div>
 
-    <!-- [AJUSTE] modalEditTx: sem date padrão; vamos adicionar campo de data para ajuste histórico -->
     <div class="modal-mask" id="modalEditTx">
       <div class="modal-box">
         <h3 id="editTxTitle">Editar transação</h3>
-        <div id="editTxTypeBanner" style="display:none;background:var(--warn-soft);color:var(--warn);padding:8px 12px;border-radius:var(--radius-sm);font-size:12px;margin-bottom:12px;display:none">
+        <div id="editTxTypeBanner" style="display:none;background:var(--warn-soft);color:var(--warn);padding:8px 12px;border-radius:var(--radius-sm);font-size:12px;margin-bottom:12px">
           <i class="fas fa-info-circle"></i> Ajuste histórico — não altera o caixa atual.
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
@@ -742,13 +739,11 @@
       </div>
     </div>
 
-    <!-- [AJUSTE] Modal do mês: inclui card de criação histórica -->
     <div class="modal-mask" id="modalEditMes">
       <div class="modal-box" style="max-width:560px">
         <h3 id="editMesTitle">Editar entradas e saídas do mês</h3>
         <p id="editMesSub" style="font-size:12.5px;color:var(--muted);margin-bottom:8px;"></p>
 
-        <!-- Criação de ajuste histórico -->
         <div class="mes-add-card">
           <div style="font-size:13px;font-weight:700;color:var(--ink)">
             <i class="fas fa-plus-circle" style="color:var(--accent)"></i> Adicionar ajuste histórico
@@ -765,7 +760,7 @@
           <select id="mesAddCategory"><option value="">Sem categoria</option></select>
           <div class="aviso">
             <i class="fas fa-info-circle"></i>
-            <div>Cria um registro <b>apenas para o histórico e gráficos</b>. Não afeta o caixa atual, orçamentos nem reservas.</div>
+            <div>Cria um registro que afeta o <b>histórico, cards e gráficos</b>. Não mexe no caixa (pool e orçamentos).</div>
           </div>
           <button type="button" class="mes-add-botao" id="mesAddBtn">
             <i class="fas fa-plus"></i> Adicionar ajuste
@@ -913,7 +908,6 @@
         const modalMes = document.getElementById('modalEditMes');
         if (modalMes && modalMes.classList.contains('open') && selectedMonth) {
           renderMesEditList();
-          // [AJUSTE] Re-renderiza o relatório do mês por baixo (garante gráficos atualizados)
           renderSelectedMonthReport();
         }
       }
@@ -954,14 +948,14 @@
         container.querySelectorAll('[data-action="rescue"]').forEach(btn => btn.addEventListener('click', () => openRescueModal(btn.dataset.id)));
       }
 
+      // [AJUSTE] Cards de Entradas/Saídas incluem TODOS os registros do ciclo (com ajustes históricos).
       function renderReports() {
         const cycle = getCycleRange(state.cycleStartDay || 6);
-        // [AJUSTE] Só conta transações "reais" (não ajustes históricos) no caixa do ciclo atual
         const totalEntries = state.transactions.filter(t =>
-          t.type === 'ENTRY' && !t.historicalAdjustment && new Date(t.date) >= cycle.start && new Date(t.date) <= cycle.end
+          t.type === 'ENTRY' && new Date(t.date) >= cycle.start && new Date(t.date) <= cycle.end
         ).reduce((acc, t) => acc + t.amount, 0);
         const totalExpenses = state.transactions.filter(t =>
-          t.type === 'EXPENSE' && !t.historicalAdjustment && new Date(t.date) >= cycle.start && new Date(t.date) <= cycle.end
+          t.type === 'EXPENSE' && new Date(t.date) >= cycle.start && new Date(t.date) <= cycle.end
         ).reduce((acc, t) => acc + t.amount, 0);
         document.getElementById('totalEntries').textContent = formatCurrency(totalEntries);
         document.getElementById('totalExpenses').textContent = formatCurrency(totalExpenses);
@@ -1013,7 +1007,6 @@
         container.querySelectorAll('.history-edit-btn').forEach(btn => btn.addEventListener('click', () => openEditTxModal(btn.dataset.editId)));
       }
 
-      // [AJUSTE] deleteTransaction: se for ajuste histórico, não reverte caixa
       function deleteTransaction(transactionId) {
         const t = state.transactions.find(tx => tx.id === transactionId);
         if (!t) return;
@@ -1046,7 +1039,6 @@
         showToast('Transação excluída!');
       }
 
-      // [AJUSTE] Abrir edição com data; se aberto pelo modal do mês, sobe z-index
       function openEditTxModal(txId, fromMesModal) {
         editingTxId = txId;
         const t = state.transactions.find(x => x.id === txId);
@@ -1058,7 +1050,7 @@
         document.getElementById('editTxDesc').value = t.description || '';
         document.getElementById('editTxDate').value = toISODateLocal(t.date);
         const banner = document.getElementById('editTxTypeBanner');
-        banner.style.display = t.historicalAdjustment ? 'flex' : 'none';
+        banner.style.display = t.historicalAdjustment ? 'block' : 'none';
         const sel = document.getElementById('editTxCategory');
         sel.innerHTML = '<option value="">Sem categoria</option>';
         getCategoriesByType(isEntry ? 'ENTRY' : 'EXPENSE').forEach(c => {
@@ -1068,12 +1060,10 @@
           sel.appendChild(o);
         });
         const modal = document.getElementById('modalEditTx');
-        // [AJUSTE] Se foi aberto pelo modal do mês, sobe z-index para ficar na frente
         modal.classList.toggle('top-modal', !!fromMesModal);
         modal.classList.add('open');
       }
 
-      // [AJUSTE] Salvar edição: se for ajuste histórico, não recalcula caixa
       function saveEditTx() {
         const t = state.transactions.find(x => x.id === editingTxId);
         if (!t) return;
@@ -1103,7 +1093,6 @@
         t.amount = novoValor;
         t.description = novaDesc || t.description;
         t.categoryId = novaCat || undefined;
-        // [AJUSTE] Aplica nova data preservando hora original
         const d = new Date(novaDataStr + 'T00:00:00');
         const hora = new Date(t.date);
         d.setHours(hora.getHours(), hora.getMinutes(), 0, 0);
@@ -1127,11 +1116,8 @@
           renderAll();
         };
 
-        // [AJUSTE] Reseta o card de criação para o mês selecionado
-        // Data padrão: dia 15 do ciclo do mês clicado (evita cair em mês anterior por ciclo)
         const [y, m] = mesKey.split('-');
         const dataSugerida = new Date(parseInt(y), parseInt(m) - 1, 15);
-        // Ajusta para cair dentro do ciclo deste `mesKey`
         const cycleStartDay = state.cycleStartDay || 6;
         const diaNoCiclo = dataSugerida.getDate() >= cycleStartDay ? dataSugerida.getDate() : cycleStartDay;
         const dataOK = new Date(parseInt(y), parseInt(m) - 1, Math.min(diaNoCiclo, 28));
@@ -1148,7 +1134,6 @@
         document.getElementById('modalEditMes').classList.add('open');
       }
 
-      // [NOVO] Popular categorias do card de criação do mês conforme tipo
       function atualizarCategoriasMesAdd() {
         const sel = document.getElementById('mesAddCategory');
         sel.innerHTML = '<option value="">Sem categoria</option>';
@@ -1197,7 +1182,6 @@
             </div>`;
           container.appendChild(div);
         });
-        // [AJUSTE] Passa flag para o modal de edição saber que foi aberto por cima
         container.querySelectorAll('[data-edit-mes]').forEach(btn => {
           btn.addEventListener('click', () => openEditTxModal(btn.dataset.editMes, true));
         });
@@ -1324,8 +1308,8 @@
         }
       }
 
-      // [AJUSTE] buildMonthlyData: inclui TODAS as ENTRY/EXPENSE (inclusive ajustes históricos)
-      // para que apareçam nos gráficos e no relatório.
+      // [AJUSTE] buildMonthlyData agora inclui ajustes históricos no fluxo/saldo.
+      // Só ALLOCATION e RESERVE_RESCUE que não existem em ajustes — continuam contando normal.
       function buildMonthlyData() {
         const cycles = {};
         state.transactions.forEach(t => {
@@ -1906,7 +1890,6 @@
         renderAll();
       });
 
-      // [NOVO] Handler do card de criação histórica no modal do mês
       document.querySelectorAll('#mesAddTipoToggle button').forEach(btn => {
         btn.addEventListener('click', () => {
           mesAddTipo = btn.dataset.tipo;
@@ -1926,9 +1909,7 @@
         if (!amt || amt <= 0) { showToast('Valor inválido'); return; }
         if (!dataStr) { showToast('Informe a data'); return; }
 
-        // [AJUSTE] Data ao meio-dia local para não cair em outro dia por timezone
         const d = new Date(dataStr + 'T12:00:00');
-        // [AJUSTE] Confere se o registro cai no ciclo do mês aberto
         if (getFinancialCycle(d) !== selectedMonth) {
           showToast('A data precisa pertencer ao ciclo ' + formatMonthLabel(selectedMonth) + '.');
           return;
@@ -1941,7 +1922,7 @@
           type: mesAddTipo,
           description: desc,
           categoryId: catId || undefined,
-          historicalAdjustment: true,   // [NOVO] flag que exclui do caixa
+          historicalAdjustment: true,
           budgetName: 'Ajuste histórico'
         });
 
@@ -1950,11 +1931,11 @@
         document.getElementById('mesAddCategory').value = '';
 
         saveState();
-        // Atualiza lista do modal + relatório por trás
         renderMesEditList();
         renderSelectedMonthReport();
         renderAllCharts();
         renderHistory();
+        renderReports();
         showToast('Ajuste histórico adicionado!');
       });
 
