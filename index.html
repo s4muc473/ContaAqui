@@ -122,6 +122,7 @@
     .mk-btn.pri:hover{filter:brightness(.94)}
     .mk-btn.success{background:var(--ok);border-color:var(--ok);color:#fff}
     .mk-btn.block{width:100%}
+    .mk-btn.sm{min-height:36px;padding:8px 12px;font-size:13px}
 
     /* =========================================================================
        SEÇÃO 5 — ORÇAMENTOS
@@ -180,8 +181,6 @@
     .chart-container .chart-title i{color:var(--accent)}
     .chart-container canvas{width:100% !important;height:200px !important;max-height:200px}
 
-    /* [NOVO] Gráfico de barras scrollável (fluxo mensal) — barras mais largas + scroll horizontal.
-       Inicia com scrollLeft no máximo, deixando o mês atual visível à direita. */
     .scrollable-chart{
       position:relative;width:100%;overflow-x:auto;overflow-y:hidden;
       -webkit-overflow-scrolling:touch;border-radius:var(--radius-sm);
@@ -191,12 +190,8 @@
     .scrollable-chart::-webkit-scrollbar{height:8px}
     .scrollable-chart::-webkit-scrollbar-track{background:var(--sunk);border-radius:10px}
     .scrollable-chart::-webkit-scrollbar-thumb{background:var(--line);border-radius:10px}
-    .scrollable-chart .scrollable-inner{
-      position:relative;height:220px;min-height:220px;
-    }
-    .scrollable-chart canvas{
-      height:220px !important;max-height:220px;
-    }
+    .scrollable-chart .scrollable-inner{position:relative;height:220px;min-height:220px}
+    .scrollable-chart canvas{height:220px !important;max-height:220px}
 
     .reserve-chart-container{
       background:var(--surface);border-radius:var(--radius);padding:16px 12px;
@@ -393,7 +388,6 @@
     .balance-chart-scroll-wrap::-webkit-scrollbar-track{background:var(--sunk);border-radius:10px}
     .balance-chart-scroll-wrap::-webkit-scrollbar-thumb{background:var(--line);border-radius:10px}
     .balance-chart-inner{position:relative;height:260px;min-height:260px}
-    .balance-chart-inner canvas{height:260px !important;max-height:260px}
     .balance-summary,.categories-summary{
       display:flex;justify-content:space-between;align-items:center;gap:8px;
       margin-top:12px;padding-top:12px;border-top:1px solid var(--line);
@@ -417,7 +411,6 @@
     .categories-chart-scroll-wrap::-webkit-scrollbar-track{background:var(--sunk);border-radius:10px}
     .categories-chart-scroll-wrap::-webkit-scrollbar-thumb{background:var(--line);border-radius:10px}
     .categories-chart-inner{position:relative;height:260px;min-height:260px}
-    .categories-chart-inner canvas{height:260px !important;max-height:260px}
     .cat-type-toggle{display:flex;gap:6px;margin-bottom:12px}
     .cat-type-toggle button{
       flex:1;background:var(--sunk);border:1px solid transparent;padding:9px 12px;
@@ -462,6 +455,33 @@
       font-family:inherit;min-height:var(--touch);
     }
     .config-row button:hover{filter:brightness(.94)}
+
+    /* [NOVO] Modal de edição em massa do mês */
+    .mes-edit-list{display:grid;gap:6px;max-height:60vh;overflow-y:auto;margin-top:8px}
+    .mes-edit-linha{
+      display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;
+      padding:10px 12px;border:1px solid var(--line);border-radius:var(--radius-sm);
+      background:var(--surface);
+    }
+    .mes-edit-info{min-width:0}
+    .mes-edit-desc{font-weight:600;font-size:13.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .mes-edit-meta{font-size:11.5px;color:var(--muted);display:flex;gap:8px;flex-wrap:wrap;margin-top:2px}
+    .mes-edit-tipo{
+      font:600 10.5px/1 var(--mono);padding:3px 8px;border-radius:999px;
+      background:var(--sunk);color:var(--muted);
+    }
+    .mes-edit-tipo.entry{background:var(--ok-soft);color:var(--ok)}
+    .mes-edit-tipo.expense{background:var(--accent-soft);color:var(--accent)}
+    .mes-edit-val{font:700 14px/1 var(--mono);text-align:right}
+    .mes-edit-val.pos{color:var(--ok)}
+    .mes-edit-val.neg{color:var(--accent)}
+    .mes-edit-acoes{display:flex;gap:4px;justify-content:flex-end;margin-top:6px}
+    .mes-edit-acoes button{
+      background:none;border:0;color:var(--muted);padding:6px;border-radius:var(--radius-sm);
+      min-width:32px;min-height:32px;display:grid;place-items:center;
+    }
+    .mes-edit-acoes button:hover{background:var(--accent-soft);color:var(--accent)}
+    .mes-edit-vazio{padding:20px;text-align:center;color:var(--muted);font-size:13px}
   </style>
 </head>
 
@@ -476,16 +496,16 @@
       <div class="menu-panel">
         <button class="menu-close" id="menuClose" aria-label="Fechar menu"><i class="fas fa-times"></i></button>
         <button data-tab="tabHome" class="active"><i class="fas fa-chart-pie"></i> Início</button>
-        <button data-tab="tabEntry"><i class="fas fa-arrow-down"></i> Entrada</button>
+        <button data-tab="tabEntry"><i class="fas fa-arrow-down"></i> Entradas</button>
         <button data-tab="tabHistory"><i class="fas fa-clock-rotate-left"></i> Histórico</button>
         <button data-tab="tabReserve"><i class="fas fa-piggy-bank"></i> Reserva</button>
-        <button data-tab="tabReports"><i class="fas fa-chart-line"></i> Gráficos</button>
+        <button data-tab="tabReports"><i class="fas fa-chart-line"></i> Fluxo Mensal</button>
         <button data-tab="tabData"><i class="fas fa-database"></i> Dados</button>
         <button data-tab="tabSettings"><i class="fas fa-gear"></i> Configurações</button>
       </div>
     </div>
 
-    <!-- HOME (sem month-header) -->
+    <!-- HOME -->
     <div id="tabHome" class="tab-content active">
       <div id="budgetListContainer" class="budget-list" style="margin-top:6px"></div>
 
@@ -500,7 +520,6 @@
         </div>
       </div>
 
-      <!-- [NOVO] Gráfico scrollável com barras mais largas. Mês atual à direita. -->
       <div class="chart-container">
         <div class="chart-title"><i class="fas fa-chart-bar"></i> Fluxo mensal</div>
         <div class="scrollable-chart" id="homeChartScroll">
@@ -519,9 +538,7 @@
       <div class="entry-tab-inputs">
         <input type="number" id="entryAmount" placeholder="Valor (R$)" step="0.01">
         <input type="text" id="entryDesc" placeholder="Descrição (opcional)">
-        <select id="entryCategorySelect">
-          <option value="">Sem categoria</option>
-        </select>
+        <select id="entryCategorySelect"><option value="">Sem categoria</option></select>
         <button id="confirmEntryBtn" class="mk-btn pri" style="width:100%">
           <i class="fas fa-check"></i> Registrar entrada
         </button>
@@ -575,9 +592,7 @@
       <h3 class="section-title"><i class="fas fa-chart-line" style="color:var(--ok)"></i> Fluxo Mensal</h3>
       <div class="month-filter-row">
         <label for="monthFilter"><i class="far fa-calendar-alt"></i> Mês:</label>
-        <select id="monthFilter">
-          <option value="">Selecione um mês</option>
-        </select>
+        <select id="monthFilter"><option value="">Selecione um mês</option></select>
       </div>
       <div id="reportsContainer"></div>
     </div>
@@ -669,9 +684,7 @@
         <h3><i class="fas fa-arrow-up" style="color:var(--accent)"></i> Registrar saída</h3>
         <input type="number" id="modalExpenseAmount" placeholder="Valor (R$)" step="0.01">
         <input type="text" id="modalExpenseDesc" placeholder="Descrição">
-        <select id="modalExpenseCategory">
-          <option value="">Sem categoria</option>
-        </select>
+        <select id="modalExpenseCategory"><option value="">Sem categoria</option></select>
         <div class="modal-actions">
           <button id="modalExpenseCancel">Cancelar</button>
           <button id="modalExpenseConfirm" class="primary">Confirmar</button>
@@ -714,9 +727,7 @@
         <h3 id="editTxTitle">Editar transação</h3>
         <input type="number" id="editTxAmount" placeholder="Valor (R$)" step="0.01">
         <input type="text" id="editTxDesc" placeholder="Descrição">
-        <select id="editTxCategory">
-          <option value="">Sem categoria</option>
-        </select>
+        <select id="editTxCategory"><option value="">Sem categoria</option></select>
         <div class="modal-actions">
           <button id="editTxCancel">Cancelar</button>
           <button id="editTxConfirm" class="primary">Salvar</button>
@@ -733,6 +744,18 @@
           <button id="editReserveCancel">Cancelar</button>
           <button id="editReserveDelete" class="danger"><i class="fas fa-trash"></i> Excluir</button>
           <button id="editReserveConfirm" class="primary">Salvar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- [NOVO] Modal de edição de todas as transações do mês -->
+    <div class="modal-mask" id="modalEditMes">
+      <div class="modal-box" style="max-width:520px">
+        <h3 id="editMesTitle">Editar entradas e saídas do mês</h3>
+        <p id="editMesSub" style="font-size:12.5px;color:var(--muted);margin-bottom:8px;"></p>
+        <div class="mes-edit-list" id="mesEditList"></div>
+        <div class="modal-actions">
+          <button id="editMesClose" class="primary">Concluir</button>
         </div>
       </div>
     </div>
@@ -762,7 +785,6 @@
 
       function generateId() { return Math.random().toString(36).substring(2, 10) + Date.now().toString(36); }
       function formatCurrency(v) { return 'R$ ' + Number(v).toFixed(2).replace('.', ','); }
-      function getMonthYear(date) { return date.toLocaleString('pt-BR', { month: 'long', year: 'numeric' }); }
       function getCycleRange(day) {
         const now = new Date();
         const year = now.getFullYear();
@@ -835,8 +857,7 @@
           entrySelect.innerHTML = '<option value="">Sem categoria</option>';
           getCategoriesByType('ENTRY').forEach(c => {
             const opt = document.createElement('option');
-            opt.value = c.id;
-            opt.textContent = c.name;
+            opt.value = c.id; opt.textContent = c.name;
             entrySelect.appendChild(opt);
           });
         }
@@ -845,8 +866,7 @@
           expenseSelect.innerHTML = '<option value="">Sem categoria</option>';
           getCategoriesByType('EXPENSE').forEach(c => {
             const opt = document.createElement('option');
-            opt.value = c.id;
-            opt.textContent = c.name;
+            opt.value = c.id; opt.textContent = c.name;
             expenseSelect.appendChild(opt);
           });
         }
@@ -866,6 +886,11 @@
         populateRescueSelects();
         updateJsonTextarea();
         renderMonthFilter();
+        // [NOVO] Se o modal de edição do mês estiver aberto, atualiza a lista dele
+        const modalMes = document.getElementById('modalEditMes');
+        if (modalMes && modalMes.classList.contains('open') && selectedMonth) {
+          renderMesEditList();
+        }
       }
 
       function renderEntryPool() {
@@ -1037,6 +1062,68 @@
         showToast('Transação atualizada!');
       }
 
+      // =========================================================================
+      // [NOVO] Modal "Editar entradas e saídas do mês"
+      // =========================================================================
+      function openEditMesModal(mesKey) {
+        if (!mesKey) { showToast('Selecione um mês primeiro.'); return; }
+        selectedMonth = mesKey;
+        const label = formatMonthLabel(mesKey);
+        document.getElementById('editMesTitle').textContent = 'Editar ' + label;
+        document.getElementById('editMesSub').textContent = 'Toque no lápis para editar ou na lixeira para excluir. Os gráficos se atualizam ao concluir.';
+        document.getElementById('editMesClose').onclick = () => {
+          document.getElementById('modalEditMes').classList.remove('open');
+          renderAll();
+        };
+        renderMesEditList();
+        document.getElementById('modalEditMes').classList.add('open');
+      }
+      function renderMesEditList() {
+        const container = document.getElementById('mesEditList');
+        if (!container || !selectedMonth) return;
+        const lista = state.transactions
+          .filter(t => (t.type === 'ENTRY' || t.type === 'EXPENSE') && getFinancialCycle(new Date(t.date)) === selectedMonth)
+          .sort((a, b) => new Date(b.date) - new Date(a.date));
+        if (!lista.length) {
+          container.innerHTML = '<div class="mes-edit-vazio"><i class="fas fa-inbox"></i><br>Nenhuma entrada ou saída neste mês.</div>';
+          return;
+        }
+        container.innerHTML = '';
+        lista.forEach(t => {
+          const isEntry = t.type === 'ENTRY';
+          const cat = t.categoryId ? getCategoryById(t.categoryId) : null;
+          const bName = t.budgetName || '';
+          const div = document.createElement('div');
+          div.className = 'mes-edit-linha';
+          div.innerHTML = `
+            <div class="mes-edit-info">
+              <div class="mes-edit-desc">${escapeHtml(t.description || (isEntry ? 'Entrada' : 'Saída'))}</div>
+              <div class="mes-edit-meta">
+                <span class="mes-edit-tipo ${isEntry ? 'entry' : 'expense'}">${isEntry ? 'Entrada' : 'Saída'}</span>
+                ${cat ? `<span class="mes-edit-tipo" style="background:${cat.color}22;color:${cat.color}">${escapeHtml(cat.name)}</span>` : ''}
+                ${bName ? `<span>${escapeHtml(bName)}</span>` : ''}
+                <span>${new Date(t.date).toLocaleDateString('pt-BR')}</span>
+              </div>
+            </div>
+            <div style="text-align:right">
+              <div class="mes-edit-val ${isEntry ? 'pos' : 'neg'}">${isEntry ? '+' : '−'} ${formatCurrency(t.amount)}</div>
+              <div class="mes-edit-acoes">
+                <button data-edit-mes="${t.id}" title="Editar"><i class="fas fa-pen"></i></button>
+                <button data-del-mes="${t.id}" title="Excluir"><i class="fas fa-trash"></i></button>
+              </div>
+            </div>`;
+          container.appendChild(div);
+        });
+        container.querySelectorAll('[data-edit-mes]').forEach(btn => {
+          btn.addEventListener('click', () => openEditTxModal(btn.dataset.editMes));
+        });
+        container.querySelectorAll('[data-del-mes]').forEach(btn => {
+          btn.addEventListener('click', () => {
+            if (confirm('Excluir esta transação?')) deleteTransaction(btn.dataset.delMes);
+          });
+        });
+      }
+
       function renderReserve() {
         const container = document.getElementById('reserveArea');
         container.innerHTML = '';
@@ -1060,11 +1147,7 @@
         container.querySelectorAll('[data-reserve-edit]').forEach(btn => btn.addEventListener('click', () => openEditReserveModal(btn.dataset.reserveEdit)));
         const total = state.reserves.reduce((a, r) => a + r.currentBalance, 0);
         const graphDiv = document.createElement('div');
-        graphDiv.style.marginTop = '16px';
-        graphDiv.style.background = 'var(--sunk)';
-        graphDiv.style.padding = '16px';
-        graphDiv.style.borderRadius = 'var(--radius)';
-        graphDiv.style.border = '1px solid var(--line)';
+        graphDiv.style.cssText = 'margin-top:16px;background:var(--sunk);padding:16px;border-radius:var(--radius);border:1px solid var(--line);';
         graphDiv.innerHTML = `<div style="font-weight:600;display:flex;gap:8px;align-items:center;"><i class="fas fa-chart-line"></i> Total em reservas</div><div style="margin-top:10px;font:700 24px/1 var(--display);">${formatCurrency(total)}</div>`;
         container.appendChild(graphDiv);
       }
@@ -1216,7 +1299,7 @@
         }
         const labels = data.map(d => formatMonthLabel(d.name));
 
-        // [NOVO] Gráfico homeChart — scrollável com barras mais largas
+        // Home chart scrollável
         renderHomeChartScrollable(data, labels);
 
         createAreaChart('reserveGrowthChart', {
@@ -1228,14 +1311,12 @@
         });
       }
 
-      // [NOVO] Gráfico homeChart scrollável: barras largas + scroll horizontal com mês atual à direita.
       function renderHomeChartScrollable(data, labels) {
         const canvas = document.getElementById('homeChart');
         const inner = document.getElementById('homeChartInner');
         const scrollWrap = document.getElementById('homeChartScroll');
         if (!canvas || !inner || !scrollWrap) return;
 
-        // Largura de cada par de barras (entradas + saídas do mesmo mês)
         const grupoWidth = 110;
         const minWidth = 280;
         const totalWidth = Math.max(minWidth, data.length * grupoWidth + 60);
@@ -1256,12 +1337,10 @@
             ]
           },
           options: {
-            responsive: false,
-            maintainAspectRatio: false,
-            animation: { duration: 300 },
+            responsive: false, maintainAspectRatio: false, animation: { duration: 300 },
             plugins: {
               legend: { labels: { boxWidth: 12, padding: 8, font: { size: 10, family: 'IBM Plex Sans' } } },
-              tooltip: { callbacks: { label: function(ctx) { return ctx.dataset.label + ': ' + formatCurrency(ctx.raw); } } }
+              tooltip: { callbacks: { label: ctx => ctx.dataset.label + ': ' + formatCurrency(ctx.raw) } }
             },
             scales: {
               y: { beginAtZero: true, grid: { color: '#eaf0e7' }, ticks: { font: { size: 9, family: 'IBM Plex Mono' }, callback: v => 'R$ ' + v.toFixed(0) } },
@@ -1270,7 +1349,6 @@
           }
         });
 
-        // [NOVO] Sempre rolar para a direita, deixando o mês atual (último) visível.
         requestAnimationFrame(() => { scrollWrap.scrollLeft = scrollWrap.scrollWidth; });
       }
 
@@ -1307,6 +1385,7 @@
         }
         container.innerHTML = '';
 
+        // 1) Fluxo do mês — [NOVO] com botão "Editar entradas e saídas"
         const fluxBlock = document.createElement('div');
         fluxBlock.className = 'month-report-block';
         fluxBlock.innerHTML = `
@@ -1319,8 +1398,13 @@
           </div>
           <div class="month-report-chart-wrap"><canvas id="monthFluxChart"></canvas></div>
           ${monthData.economia > 0 ? `<div class="month-economy-badge"><i class="fas fa-piggy-bank"></i> Economia: ${formatCurrency(monthData.economia)}</div>` : ''}
+          <button class="mk-btn block sm" id="btn-edit-mes" style="margin-top:12px">
+            <i class="fas fa-pen"></i> Editar entradas e saídas do mês
+          </button>
         `;
         container.appendChild(fluxBlock);
+
+        fluxBlock.querySelector('#btn-edit-mes').addEventListener('click', () => openEditMesModal(monthData.name));
 
         const ctxFlux = document.getElementById('monthFluxChart').getContext('2d');
         if (chartInstances['monthFluxChart']) chartInstances['monthFluxChart'].destroy();
@@ -1340,17 +1424,20 @@
           }
         });
 
+        // 2) Saldo mensal (barras scrolláveis)
         const balanceBlock = document.createElement('div');
         balanceBlock.className = 'month-report-block';
         balanceBlock.style.marginTop = '18px';
         balanceBlock.innerHTML = `
           <div class="month-report-header"><h4><i class="fas fa-chart-bar" style="color:var(--info)"></i> Saldo Mensal (Positivo / Negativo)</h4></div>
-          <div class="balance-chart-scroll-wrap"><div class="balance-chart-inner"><canvas id="balanceBarsChart"></canvas></div></div>
+          <div class="balance-chart-scroll-wrap"><div class="balance-chart-inner" id="balanceChartInner"><canvas id="balanceBarsChart"></canvas></div></div>
           <div class="balance-summary" id="balanceSummary"></div>
         `;
         container.appendChild(balanceBlock);
-        renderBalanceBarsChart(data);
+        // [CORREÇÃO] setTimeout garante reflow antes de instanciar o Chart
+        setTimeout(() => renderBalanceBarsChart(data), 0);
 
+        // 3) Categorias (barras scrolláveis)
         const categoriesBlock = document.createElement('div');
         categoriesBlock.className = 'month-report-block';
         categoriesBlock.style.marginTop = '18px';
@@ -1360,7 +1447,7 @@
             <button data-type="EXPENSE" class="${selectedCategoryType === 'EXPENSE' ? 'active' : ''}"><i class="fas fa-arrow-up"></i> Saídas</button>
             <button data-type="ENTRY" class="${selectedCategoryType === 'ENTRY' ? 'active' : ''}"><i class="fas fa-arrow-down"></i> Entradas</button>
           </div>
-          <div class="categories-chart-scroll-wrap"><div class="categories-chart-inner"><canvas id="categoriesChart"></canvas></div></div>
+          <div class="categories-chart-scroll-wrap"><div class="categories-chart-inner" id="categoriesChartInner"><canvas id="categoriesChart"></canvas></div></div>
           <div class="categories-summary" id="categoriesSummary"></div>
         `;
         container.appendChild(categoriesBlock);
@@ -1373,17 +1460,22 @@
             renderCategoriesChart();
           });
         });
-        renderCategoriesChart();
+        // [CORREÇÃO] setTimeout garante reflow antes de instanciar o Chart
+        setTimeout(() => renderCategoriesChart(), 0);
       }
 
+      // [CORREÇÃO] Chart.js com responsive:false precisa de width/height explícitos.
+      // Aplicamos canvas.width e canvas.height em pixels para garantir renderização.
       function renderCategoriesChart() {
         const canvas = document.getElementById('categoriesChart');
         const inner = document.getElementById('categoriesChartInner');
         if (!canvas || !inner || !selectedMonth) return;
         const totals = buildCategoryTotals(selectedMonth, selectedCategoryType);
         if (totals.length === 0) {
-          inner.style.width = '100%'; canvas.style.width = '100%'; canvas.style.height = '120px';
-          if (chartInstances['categoriesChart']) chartInstances['categoriesChart'].destroy();
+          inner.style.width = '100%';
+          canvas.style.width = '100%';
+          canvas.style.height = '120px';
+          if (chartInstances['categoriesChart']) { chartInstances['categoriesChart'].destroy(); delete chartInstances['categoriesChart']; }
           const summaryEl = document.getElementById('categoriesSummary');
           if (summaryEl) summaryEl.innerHTML = `<div style="width:100%;text-align:center;color:var(--muted);padding:20px;font-size:13px;"><i class="fas fa-inbox"></i> Nenhuma ${selectedCategoryType === 'ENTRY' ? 'entrada' : 'saída'} categorizada neste mês.</div>`;
           return;
@@ -1392,7 +1484,10 @@
         const totalWidth = Math.max(280, totals.length * barWidth + 60);
         inner.style.width = totalWidth + 'px';
         canvas.style.width = totalWidth + 'px';
+        canvas.width = totalWidth;
+        canvas.height = 260;
         canvas.style.height = '260px';
+
         if (chartInstances['categoriesChart']) chartInstances['categoriesChart'].destroy();
         chartInstances['categoriesChart'] = new Chart(canvas.getContext('2d'), {
           type: 'bar',
@@ -1429,10 +1524,14 @@
         const totalWidth = Math.max(280, data.length * 42 + 60);
         inner.style.width = totalWidth + 'px';
         canvas.style.width = totalWidth + 'px';
+        canvas.width = totalWidth;
+        canvas.height = 260;
         canvas.style.height = '260px';
+
         const labels = data.map(d => formatMonthShort(d.name));
         const saldos = data.map(d => d.saldo);
         const colors = saldos.map(s => s >= 0 ? '#16a34a' : '#ea580c');
+
         if (chartInstances['balanceBarsChart']) chartInstances['balanceBarsChart'].destroy();
         chartInstances['balanceBarsChart'] = new Chart(canvas.getContext('2d'), {
           type: 'bar',
@@ -1452,6 +1551,7 @@
             }
           }
         });
+
         const summaryEl = document.getElementById('balanceSummary');
         if (summaryEl) {
           const totalSaldo = saldos.reduce((a, b) => a + b, 0);
@@ -1837,18 +1937,10 @@
           btn.classList.add('active');
           if (tabId === 'tabHistory') renderHistory();
           if (tabId === 'tabReserve') renderReserve();
-          if (tabId === 'tabEntry') {
-            renderEntryPool();
-            populateAllocSelects();
-            renderCategorySelects();
-          }
-          if (tabId === 'tabReports') {
-            renderMonthFilter();
-            setTimeout(renderSelectedMonthReport, 100);
-          }
+          if (tabId === 'tabEntry') { renderEntryPool(); populateAllocSelects(); renderCategorySelects(); }
+          if (tabId === 'tabReports') { renderMonthFilter(); setTimeout(renderSelectedMonthReport, 100); }
           if (tabId === 'tabSettings') renderSettings();
           if (tabId === 'tabHome') {
-            // [NOVO] Ao voltar para Início, garante scroll no final do gráfico (mês atual visível)
             requestAnimationFrame(() => {
               const sw = document.getElementById('homeChartScroll');
               if (sw) sw.scrollLeft = sw.scrollWidth;
