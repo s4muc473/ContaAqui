@@ -16,9 +16,6 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <style>
-    /* =========================================================================
-       SEÇÃO 1 — TOKENS
-       ========================================================================= */
     :root{
       --bg:#f4f7f3; --surface:#ffffff; --sunk:#eaf0e7;
       --ink:#1a1f1a; --muted:#5e6b5c; --line:#dbe5d8;
@@ -51,9 +48,6 @@
       box-shadow:0 0 40px rgba(20,60,30,.04);
     }
 
-    /* =========================================================================
-       SEÇÃO 2 — HEADER E MENU
-       ========================================================================= */
     .header{
       display:flex;justify-content:space-between;align-items:center;
       padding:8px 0 14px 0;border-bottom:1px solid var(--line);
@@ -101,15 +95,9 @@
     }
     .menu-close:hover{background:var(--line);color:var(--ink)}
 
-    /* =========================================================================
-       SEÇÃO 3 — TABS
-       ========================================================================= */
     .tab-content{display:none;margin-top:18px}
     .tab-content.active{display:block}
 
-    /* =========================================================================
-       SEÇÃO 4 — COMPONENTES BASE
-       ========================================================================= */
     .mk-btn{
       display:inline-flex;align-items:center;justify-content:center;gap:7px;
       font:600 14px/1.2 var(--body);min-height:var(--touch);padding:11px 16px;
@@ -124,9 +112,6 @@
     .mk-btn.block{width:100%}
     .mk-btn.sm{min-height:36px;padding:8px 12px;font-size:13px}
 
-    /* =========================================================================
-       SEÇÃO 5 — ORÇAMENTOS
-       ========================================================================= */
     .budget-list{margin:16px 0 12px 0;display:flex;flex-direction:column;gap:8px}
     .budget-item{
       background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
@@ -151,9 +136,6 @@
     }
     .budget-actions button:hover{background:var(--sunk);color:var(--ink)}
 
-    /* =========================================================================
-       SEÇÃO 6 — CARDS DE RELATÓRIO
-       ========================================================================= */
     .report-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0 8px 0}
     .report-card{
       background:var(--surface);border-radius:var(--radius);padding:16px 14px;
@@ -167,9 +149,6 @@
       font:700 20px/1.1 var(--display);letter-spacing:-.01em;color:var(--ink);
     }
 
-    /* =========================================================================
-       SEÇÃO 7 — GRÁFICOS
-       ========================================================================= */
     .chart-container{
       background:var(--surface);border-radius:var(--radius);padding:16px 12px;
       margin:14px 0;border:1px solid var(--line);min-height:240px;
@@ -204,15 +183,14 @@
     .reserve-chart-container .chart-title i{color:var(--accent)}
     .reserve-chart-container canvas{width:100% !important;height:240px !important;max-height:240px}
 
-    /* =========================================================================
-       SEÇÃO 8 — MODAIS
-       ========================================================================= */
     .modal-mask{
       position:fixed;inset:0;background:color-mix(in srgb,var(--ink) 42%,transparent);
       backdrop-filter:blur(2px);display:none;align-items:center;justify-content:center;
       z-index:1000;padding:20px;
     }
     .modal-mask.open{display:flex}
+    /* [NOVO] Quando o modal de edição de transação é aberto por cima do modal do mês, sobe o z-index */
+    .modal-mask.top-modal{z-index:1200}
     .modal-box{
       background:var(--surface);width:100%;max-width:400px;border-radius:var(--radius);
       padding:24px 22px;box-shadow:var(--shadow);max-height:90vh;overflow-y:auto;
@@ -236,9 +214,6 @@
     .modal-actions .danger{background:var(--surface);color:var(--accent);border-color:color-mix(in srgb,var(--accent) 40%,var(--line))}
     .modal-actions .danger:hover{background:var(--accent-soft)}
 
-    /* =========================================================================
-       SEÇÃO 9 — HISTÓRICO
-       ========================================================================= */
     .history-item{
       display:flex;justify-content:space-between;align-items:center;gap:10px;
       padding:12px 0;border-bottom:1px solid var(--line);font-size:14px;
@@ -269,9 +244,6 @@
     .filter-group button:hover{border-color:var(--muted);color:var(--ink)}
     .filter-group .active-filter{background:var(--ink);color:var(--bg);border-color:var(--ink)}
 
-    /* =========================================================================
-       SEÇÃO 10 — RESERVA
-       ========================================================================= */
     .reserve-card{
       background:var(--surface);border:1px solid var(--line);
       border-radius:var(--radius);padding:14px 16px;margin:8px 0;
@@ -288,9 +260,6 @@
     }
     .reserve-card .actions button:hover{background:var(--sunk);color:var(--ink)}
 
-    /* =========================================================================
-       SEÇÃO 11 — DADOS
-       ========================================================================= */
     .json-actions{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px}
     .json-actions button{
       background:var(--surface);border:1px solid var(--line);
@@ -308,9 +277,6 @@
       font-family:inherit;min-height:var(--touch);
     }
 
-    /* =========================================================================
-       SEÇÃO 12 — TOAST
-       ========================================================================= */
     .toast{
       position:fixed;left:20px;right:20px;bottom:20px;
       background:var(--ink);color:var(--bg);padding:12px 18px;
@@ -320,9 +286,6 @@
     }
     .toast.show{opacity:1}
 
-    /* =========================================================================
-       SEÇÃO 13 — CATEGORIAS / CONFIG
-       ========================================================================= */
     .category-list{display:flex;flex-direction:column;gap:8px;margin-bottom:16px}
     .category-item{
       display:flex;align-items:center;justify-content:space-between;gap:10px;
@@ -348,9 +311,6 @@
       display:flex;align-items:center;gap:10px;color:var(--ink);
     }
 
-    /* =========================================================================
-       SEÇÃO 14 — RELATÓRIOS
-       ========================================================================= */
     .month-filter-row{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center}
     .month-filter-row label{font-size:13px;font-weight:600;color:var(--muted);margin-right:4px;display:flex;align-items:center;gap:6px}
     .month-filter-row select{
@@ -420,9 +380,6 @@
     }
     .cat-type-toggle button.active{background:var(--ink);color:var(--bg)}
 
-    /* =========================================================================
-       SEÇÃO 15 — CONFIGURAÇÕES
-       ========================================================================= */
     .config-block{
       border:1px solid var(--line);border-radius:var(--radius);
       background:var(--surface);padding:16px;margin-bottom:14px;
@@ -456,7 +413,6 @@
     }
     .config-row button:hover{filter:brightness(.94)}
 
-    /* Modal de edição em massa do mês */
     .mes-edit-list{display:grid;gap:6px;max-height:60vh;overflow-y:auto;margin-top:8px}
     .mes-edit-linha{
       display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;
@@ -482,6 +438,37 @@
     }
     .mes-edit-acoes button:hover{background:var(--accent-soft);color:var(--accent)}
     .mes-edit-vazio{padding:20px;text-align:center;color:var(--muted);font-size:13px}
+
+    /* [NOVO] Card de criação histórica no modal do mês */
+    .mes-add-card{
+      border:1px dashed var(--line);border-radius:var(--radius-sm);
+      padding:12px;margin-bottom:10px;background:var(--sunk);
+      display:grid;gap:8px;
+    }
+    .mes-add-card .row-2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+    .mes-add-card input,.mes-add-card select{
+      width:100%;padding:10px 12px;border:1px solid var(--line);
+      border-radius:var(--radius-sm);font-size:14px;background:var(--surface);
+      color:var(--ink);font-family:inherit;min-height:40px;
+    }
+    .mes-add-card .aviso{
+      font-size:11.5px;color:var(--warn);display:flex;gap:6px;align-items:flex-start;
+    }
+    .mes-add-card .aviso i{margin-top:2px}
+    .mes-add-tipo-toggle{display:flex;gap:6px}
+    .mes-add-tipo-toggle button{
+      flex:1;background:var(--surface);border:1px solid var(--line);padding:8px 12px;
+      border-radius:var(--radius-sm);font-weight:600;font-size:13px;cursor:pointer;
+      color:var(--muted);display:flex;align-items:center;justify-content:center;gap:6px;
+      font-family:inherit;min-height:40px;
+    }
+    .mes-add-tipo-toggle button.active{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+    .mes-add-botao{
+      background:var(--accent);color:var(--accent-ink);border:0;
+      padding:11px 16px;border-radius:var(--radius-sm);font-weight:600;
+      cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;gap:6px;
+      font-family:inherit;min-height:40px;
+    }
   </style>
 </head>
 
@@ -722,10 +709,17 @@
       </div>
     </div>
 
+    <!-- [AJUSTE] modalEditTx: sem date padrão; vamos adicionar campo de data para ajuste histórico -->
     <div class="modal-mask" id="modalEditTx">
       <div class="modal-box">
         <h3 id="editTxTitle">Editar transação</h3>
-        <input type="number" id="editTxAmount" placeholder="Valor (R$)" step="0.01">
+        <div id="editTxTypeBanner" style="display:none;background:var(--warn-soft);color:var(--warn);padding:8px 12px;border-radius:var(--radius-sm);font-size:12px;margin-bottom:12px;display:none">
+          <i class="fas fa-info-circle"></i> Ajuste histórico — não altera o caixa atual.
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <input type="number" id="editTxAmount" placeholder="Valor (R$)" step="0.01">
+          <input type="date" id="editTxDate" placeholder="Data" style="margin-bottom:12px">
+        </div>
         <input type="text" id="editTxDesc" placeholder="Descrição">
         <select id="editTxCategory"><option value="">Sem categoria</option></select>
         <div class="modal-actions">
@@ -748,10 +742,36 @@
       </div>
     </div>
 
+    <!-- [AJUSTE] Modal do mês: inclui card de criação histórica -->
     <div class="modal-mask" id="modalEditMes">
-      <div class="modal-box" style="max-width:520px">
+      <div class="modal-box" style="max-width:560px">
         <h3 id="editMesTitle">Editar entradas e saídas do mês</h3>
         <p id="editMesSub" style="font-size:12.5px;color:var(--muted);margin-bottom:8px;"></p>
+
+        <!-- Criação de ajuste histórico -->
+        <div class="mes-add-card">
+          <div style="font-size:13px;font-weight:700;color:var(--ink)">
+            <i class="fas fa-plus-circle" style="color:var(--accent)"></i> Adicionar ajuste histórico
+          </div>
+          <div class="mes-add-tipo-toggle" id="mesAddTipoToggle">
+            <button type="button" data-tipo="ENTRY" class="active"><i class="fas fa-arrow-down"></i> Entrada</button>
+            <button type="button" data-tipo="EXPENSE"><i class="fas fa-arrow-up"></i> Saída</button>
+          </div>
+          <div class="row-2">
+            <input type="number" id="mesAddAmount" placeholder="Valor (R$)" step="0.01">
+            <input type="date" id="mesAddDate">
+          </div>
+          <input type="text" id="mesAddDesc" placeholder="Descrição (ex.: ajuste salário março)">
+          <select id="mesAddCategory"><option value="">Sem categoria</option></select>
+          <div class="aviso">
+            <i class="fas fa-info-circle"></i>
+            <div>Cria um registro <b>apenas para o histórico e gráficos</b>. Não afeta o caixa atual, orçamentos nem reservas.</div>
+          </div>
+          <button type="button" class="mes-add-botao" id="mesAddBtn">
+            <i class="fas fa-plus"></i> Adicionar ajuste
+          </button>
+        </div>
+
         <div class="mes-edit-list" id="mesEditList"></div>
         <div class="modal-actions">
           <button id="editMesClose" class="primary">Concluir</button>
@@ -781,6 +801,7 @@
       let editingReserveId = null;
       let selectedMonth = '';
       let selectedCategoryType = 'EXPENSE';
+      let mesAddTipo = 'ENTRY';
 
       function generateId() { return Math.random().toString(36).substring(2, 10) + Date.now().toString(36); }
       function formatCurrency(v) { return 'R$ ' + Number(v).toFixed(2).replace('.', ','); }
@@ -820,6 +841,10 @@
         return String(s == null ? '' : s)
           .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
           .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+      }
+      function toISODateLocal(d) {
+        const x = new Date(d);
+        return `${x.getFullYear()}-${String(x.getMonth()+1).padStart(2,'0')}-${String(x.getDate()).padStart(2,'0')}`;
       }
 
       function showToast(msg) {
@@ -888,6 +913,8 @@
         const modalMes = document.getElementById('modalEditMes');
         if (modalMes && modalMes.classList.contains('open') && selectedMonth) {
           renderMesEditList();
+          // [AJUSTE] Re-renderiza o relatório do mês por baixo (garante gráficos atualizados)
+          renderSelectedMonthReport();
         }
       }
 
@@ -929,11 +956,12 @@
 
       function renderReports() {
         const cycle = getCycleRange(state.cycleStartDay || 6);
+        // [AJUSTE] Só conta transações "reais" (não ajustes históricos) no caixa do ciclo atual
         const totalEntries = state.transactions.filter(t =>
-          t.type === 'ENTRY' && new Date(t.date) >= cycle.start && new Date(t.date) <= cycle.end
+          t.type === 'ENTRY' && !t.historicalAdjustment && new Date(t.date) >= cycle.start && new Date(t.date) <= cycle.end
         ).reduce((acc, t) => acc + t.amount, 0);
         const totalExpenses = state.transactions.filter(t =>
-          t.type === 'EXPENSE' && new Date(t.date) >= cycle.start && new Date(t.date) <= cycle.end
+          t.type === 'EXPENSE' && !t.historicalAdjustment && new Date(t.date) >= cycle.start && new Date(t.date) <= cycle.end
         ).reduce((acc, t) => acc + t.amount, 0);
         document.getElementById('totalEntries').textContent = formatCurrency(totalEntries);
         document.getElementById('totalExpenses').textContent = formatCurrency(totalExpenses);
@@ -964,9 +992,10 @@
             if (cat) categoryTag = `<span class="history-category-tag" style="background:${cat.color}22;color:${cat.color}">${escapeHtml(cat.name)}</span>`;
           }
           const budgetTag = t.budgetName ? `<span class="history-category-tag" style="background:var(--sunk);color:var(--muted)">${escapeHtml(t.budgetName)}</span>` : '';
+          const histTag = t.historicalAdjustment ? `<span class="history-category-tag" style="background:var(--warn-soft);color:var(--warn)">Ajuste</span>` : '';
           div.innerHTML = `
           <div style="flex:1;min-width:0;">
-            <span class="desc">${escapeHtml(t.description || t.type)}</span> ${categoryTag} ${budgetTag}
+            <span class="desc">${escapeHtml(t.description || t.type)}</span> ${categoryTag} ${budgetTag} ${histTag}
             <span style="font-size:12px;color:var(--muted);display:block;">${new Date(t.date).toLocaleDateString('pt-BR')}</span>
           </div>
           <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
@@ -984,36 +1013,41 @@
         container.querySelectorAll('.history-edit-btn').forEach(btn => btn.addEventListener('click', () => openEditTxModal(btn.dataset.editId)));
       }
 
+      // [AJUSTE] deleteTransaction: se for ajuste histórico, não reverte caixa
       function deleteTransaction(transactionId) {
         const t = state.transactions.find(tx => tx.id === transactionId);
         if (!t) return;
-        if (t.type === 'ENTRY') {
-          state.entryPool = Math.max(0, (state.entryPool || 0) - t.amount);
-        } else if (t.type === 'EXPENSE') {
-          if (t.fromId) { const budget = state.budgets.find(b => b.id === t.fromId); if (budget) budget.currentBalance = (budget.currentBalance || 0) + t.amount; }
-        } else if (t.type === 'ALLOCATION') {
-          if (t.toId) {
-            const budget = state.budgets.find(b => b.id === t.toId);
-            if (budget) budget.currentBalance = Math.max(0, (budget.currentBalance || 0) - t.amount);
-            const reserve = state.reserves.find(r => r.id === t.toId);
-            if (reserve) reserve.currentBalance = Math.max(0, (reserve.currentBalance || 0) - t.amount);
+        const isHistorical = !!t.historicalAdjustment;
+        if (!isHistorical) {
+          if (t.type === 'ENTRY') {
+            state.entryPool = Math.max(0, (state.entryPool || 0) - t.amount);
+          } else if (t.type === 'EXPENSE') {
+            if (t.fromId) { const budget = state.budgets.find(b => b.id === t.fromId); if (budget) budget.currentBalance = (budget.currentBalance || 0) + t.amount; }
+          } else if (t.type === 'ALLOCATION') {
+            if (t.toId) {
+              const budget = state.budgets.find(b => b.id === t.toId);
+              if (budget) budget.currentBalance = Math.max(0, (budget.currentBalance || 0) - t.amount);
+              const reserve = state.reserves.find(r => r.id === t.toId);
+              if (reserve) reserve.currentBalance = Math.max(0, (reserve.currentBalance || 0) - t.amount);
+            }
+            if (t.fromId && t.toId && state.budgets.some(b => b.id === t.fromId) && state.budgets.some(b => b.id === t.toId)) {
+              const fromB = state.budgets.find(b => b.id === t.fromId);
+              const toB = state.budgets.find(b => b.id === t.toId);
+              if (fromB) fromB.currentBalance = (fromB.currentBalance || 0) + t.amount;
+              if (toB) toB.currentBalance = Math.max(0, (toB.currentBalance || 0) - t.amount);
+            }
+          } else if (t.type === 'RESERVE_RESCUE') {
+            if (t.fromId) { const reserve = state.reserves.find(r => r.id === t.fromId); if (reserve) reserve.currentBalance = (reserve.currentBalance || 0) + t.amount; }
+            if (t.toId) { const budget = state.budgets.find(b => b.id === t.toId); if (budget) budget.currentBalance = Math.max(0, (budget.currentBalance || 0) - t.amount); }
           }
-          if (t.fromId && t.toId && state.budgets.some(b => b.id === t.fromId) && state.budgets.some(b => b.id === t.toId)) {
-            const fromB = state.budgets.find(b => b.id === t.fromId);
-            const toB = state.budgets.find(b => b.id === t.toId);
-            if (fromB) fromB.currentBalance = (fromB.currentBalance || 0) + t.amount;
-            if (toB) toB.currentBalance = Math.max(0, (toB.currentBalance || 0) - t.amount);
-          }
-        } else if (t.type === 'RESERVE_RESCUE') {
-          if (t.fromId) { const reserve = state.reserves.find(r => r.id === t.fromId); if (reserve) reserve.currentBalance = (reserve.currentBalance || 0) + t.amount; }
-          if (t.toId) { const budget = state.budgets.find(b => b.id === t.toId); if (budget) budget.currentBalance = Math.max(0, (budget.currentBalance || 0) - t.amount); }
         }
         state.transactions = state.transactions.filter(tx => tx.id !== transactionId);
         renderAll();
         showToast('Transação excluída!');
       }
 
-      function openEditTxModal(txId) {
+      // [AJUSTE] Abrir edição com data; se aberto pelo modal do mês, sobe z-index
+      function openEditTxModal(txId, fromMesModal) {
         editingTxId = txId;
         const t = state.transactions.find(x => x.id === txId);
         if (!t) return;
@@ -1022,6 +1056,9 @@
         document.getElementById('editTxTitle').textContent = isEntry ? 'Editar entrada' : 'Editar saída';
         document.getElementById('editTxAmount').value = t.amount;
         document.getElementById('editTxDesc').value = t.description || '';
+        document.getElementById('editTxDate').value = toISODateLocal(t.date);
+        const banner = document.getElementById('editTxTypeBanner');
+        banner.style.display = t.historicalAdjustment ? 'flex' : 'none';
         const sel = document.getElementById('editTxCategory');
         sel.innerHTML = '<option value="">Sem categoria</option>';
         getCategoriesByType(isEntry ? 'ENTRY' : 'EXPENSE').forEach(c => {
@@ -1030,31 +1067,50 @@
           if (c.id === t.categoryId) o.selected = true;
           sel.appendChild(o);
         });
-        document.getElementById('modalEditTx').classList.add('open');
+        const modal = document.getElementById('modalEditTx');
+        // [AJUSTE] Se foi aberto pelo modal do mês, sobe z-index para ficar na frente
+        modal.classList.toggle('top-modal', !!fromMesModal);
+        modal.classList.add('open');
       }
+
+      // [AJUSTE] Salvar edição: se for ajuste histórico, não recalcula caixa
       function saveEditTx() {
         const t = state.transactions.find(x => x.id === editingTxId);
         if (!t) return;
         const novoValor = parseFloat(document.getElementById('editTxAmount').value);
         const novaDesc = document.getElementById('editTxDesc').value.trim();
         const novaCat = document.getElementById('editTxCategory').value;
+        const novaDataStr = document.getElementById('editTxDate').value;
         if (!novoValor || novoValor <= 0) { showToast('Valor inválido'); return; }
+        if (!novaDataStr) { showToast('Data inválida'); return; }
+
+        const isHistorical = !!t.historicalAdjustment;
         const valorAntigo = t.amount;
         const diff = novoValor - valorAntigo;
-        if (t.type === 'ENTRY') {
-          state.entryPool = Math.max(0, (state.entryPool || 0) + diff);
-        } else if (t.type === 'EXPENSE') {
-          const b = state.budgets.find(x => x.id === t.fromId);
-          if (b) {
-            const disponivel = b.currentBalance + valorAntigo;
-            if (novoValor > disponivel) { showToast('Saldo insuficiente para esse novo valor.'); return; }
-            b.currentBalance = disponivel - novoValor;
+
+        if (!isHistorical) {
+          if (t.type === 'ENTRY') {
+            state.entryPool = Math.max(0, (state.entryPool || 0) + diff);
+          } else if (t.type === 'EXPENSE') {
+            const b = state.budgets.find(x => x.id === t.fromId);
+            if (b) {
+              const disponivel = b.currentBalance + valorAntigo;
+              if (novoValor > disponivel) { showToast('Saldo insuficiente para esse novo valor.'); return; }
+              b.currentBalance = disponivel - novoValor;
+            }
           }
         }
         t.amount = novoValor;
         t.description = novaDesc || t.description;
         t.categoryId = novaCat || undefined;
+        // [AJUSTE] Aplica nova data preservando hora original
+        const d = new Date(novaDataStr + 'T00:00:00');
+        const hora = new Date(t.date);
+        d.setHours(hora.getHours(), hora.getMinutes(), 0, 0);
+        t.date = d.toISOString();
+
         document.getElementById('modalEditTx').classList.remove('open');
+        document.getElementById('modalEditTx').classList.remove('top-modal');
         editingTxId = null;
         renderAll();
         showToast('Transação atualizada!');
@@ -1065,14 +1121,44 @@
         selectedMonth = mesKey;
         const label = formatMonthLabel(mesKey);
         document.getElementById('editMesTitle').textContent = 'Editar ' + label;
-        document.getElementById('editMesSub').textContent = 'Toque no lápis para editar ou na lixeira para excluir. Os gráficos se atualizam ao concluir.';
+        document.getElementById('editMesSub').textContent = 'Edite, exclua ou crie ajustes históricos. Nada aqui afeta o caixa atual.';
         document.getElementById('editMesClose').onclick = () => {
           document.getElementById('modalEditMes').classList.remove('open');
           renderAll();
         };
+
+        // [AJUSTE] Reseta o card de criação para o mês selecionado
+        // Data padrão: dia 15 do ciclo do mês clicado (evita cair em mês anterior por ciclo)
+        const [y, m] = mesKey.split('-');
+        const dataSugerida = new Date(parseInt(y), parseInt(m) - 1, 15);
+        // Ajusta para cair dentro do ciclo deste `mesKey`
+        const cycleStartDay = state.cycleStartDay || 6;
+        const diaNoCiclo = dataSugerida.getDate() >= cycleStartDay ? dataSugerida.getDate() : cycleStartDay;
+        const dataOK = new Date(parseInt(y), parseInt(m) - 1, Math.min(diaNoCiclo, 28));
+        document.getElementById('mesAddDate').value = toISODateLocal(dataOK);
+        document.getElementById('mesAddAmount').value = '';
+        document.getElementById('mesAddDesc').value = '';
+        mesAddTipo = 'ENTRY';
+        document.querySelectorAll('#mesAddTipoToggle button').forEach(b => {
+          b.classList.toggle('active', b.dataset.tipo === 'ENTRY');
+        });
+        atualizarCategoriasMesAdd();
+
         renderMesEditList();
         document.getElementById('modalEditMes').classList.add('open');
       }
+
+      // [NOVO] Popular categorias do card de criação do mês conforme tipo
+      function atualizarCategoriasMesAdd() {
+        const sel = document.getElementById('mesAddCategory');
+        sel.innerHTML = '<option value="">Sem categoria</option>';
+        getCategoriesByType(mesAddTipo).forEach(c => {
+          const o = document.createElement('option');
+          o.value = c.id; o.textContent = c.name;
+          sel.appendChild(o);
+        });
+      }
+
       function renderMesEditList() {
         const container = document.getElementById('mesEditList');
         if (!container || !selectedMonth) return;
@@ -1088,6 +1174,7 @@
           const isEntry = t.type === 'ENTRY';
           const cat = t.categoryId ? getCategoryById(t.categoryId) : null;
           const bName = t.budgetName || '';
+          const histTag = t.historicalAdjustment ? `<span class="mes-edit-tipo" style="background:var(--warn-soft);color:var(--warn)">Ajuste</span>` : '';
           const div = document.createElement('div');
           div.className = 'mes-edit-linha';
           div.innerHTML = `
@@ -1095,6 +1182,7 @@
               <div class="mes-edit-desc">${escapeHtml(t.description || (isEntry ? 'Entrada' : 'Saída'))}</div>
               <div class="mes-edit-meta">
                 <span class="mes-edit-tipo ${isEntry ? 'entry' : 'expense'}">${isEntry ? 'Entrada' : 'Saída'}</span>
+                ${histTag}
                 ${cat ? `<span class="mes-edit-tipo" style="background:${cat.color}22;color:${cat.color}">${escapeHtml(cat.name)}</span>` : ''}
                 ${bName ? `<span>${escapeHtml(bName)}</span>` : ''}
                 <span>${new Date(t.date).toLocaleDateString('pt-BR')}</span>
@@ -1109,8 +1197,9 @@
             </div>`;
           container.appendChild(div);
         });
+        // [AJUSTE] Passa flag para o modal de edição saber que foi aberto por cima
         container.querySelectorAll('[data-edit-mes]').forEach(btn => {
-          btn.addEventListener('click', () => openEditTxModal(btn.dataset.editMes));
+          btn.addEventListener('click', () => openEditTxModal(btn.dataset.editMes, true));
         });
         container.querySelectorAll('[data-del-mes]').forEach(btn => {
           btn.addEventListener('click', () => {
@@ -1235,6 +1324,8 @@
         }
       }
 
+      // [AJUSTE] buildMonthlyData: inclui TODAS as ENTRY/EXPENSE (inclusive ajustes históricos)
+      // para que apareçam nos gráficos e no relatório.
       function buildMonthlyData() {
         const cycles = {};
         state.transactions.forEach(t => {
@@ -1379,7 +1470,6 @@
         }
         container.innerHTML = '';
 
-        // 1) Fluxo do mês
         const fluxBlock = document.createElement('div');
         fluxBlock.className = 'month-report-block';
         fluxBlock.innerHTML = `
@@ -1418,7 +1508,6 @@
           }
         });
 
-        // 2) Saldo mensal
         const balanceBlock = document.createElement('div');
         balanceBlock.className = 'month-report-block';
         balanceBlock.style.marginTop = '18px';
@@ -1430,7 +1519,6 @@
         container.appendChild(balanceBlock);
         setTimeout(() => renderBalanceBarsChart(data), 0);
 
-        // 3) Categorias
         const categoriesBlock = document.createElement('div');
         categoriesBlock.className = 'month-report-block';
         categoriesBlock.style.marginTop = '18px';
@@ -1541,8 +1629,6 @@
             }
           }
         });
-
-        // [AJUSTE] Resumo apenas com o saldo total.
         const summaryEl = document.getElementById('balanceSummary');
         if (summaryEl) {
           const totalSaldo = saldos.reduce((a, b) => a + b, 0);
@@ -1760,7 +1846,9 @@
       });
 
       document.getElementById('editTxCancel').addEventListener('click', () => {
-        document.getElementById('modalEditTx').classList.remove('open'); editingTxId = null;
+        document.getElementById('modalEditTx').classList.remove('open');
+        document.getElementById('modalEditTx').classList.remove('top-modal');
+        editingTxId = null;
       });
       document.getElementById('editTxConfirm').addEventListener('click', saveEditTx);
 
@@ -1816,6 +1904,58 @@
         document.getElementById('allocAmount').value = '';
         document.getElementById('allocTargetSelect').value = '';
         renderAll();
+      });
+
+      // [NOVO] Handler do card de criação histórica no modal do mês
+      document.querySelectorAll('#mesAddTipoToggle button').forEach(btn => {
+        btn.addEventListener('click', () => {
+          mesAddTipo = btn.dataset.tipo;
+          document.querySelectorAll('#mesAddTipoToggle button').forEach(b => {
+            b.classList.toggle('active', b === btn);
+          });
+          atualizarCategoriasMesAdd();
+        });
+      });
+
+      document.getElementById('mesAddBtn').addEventListener('click', () => {
+        const amt = parseFloat(document.getElementById('mesAddAmount').value);
+        const dataStr = document.getElementById('mesAddDate').value;
+        const desc = document.getElementById('mesAddDesc').value.trim() || (mesAddTipo === 'ENTRY' ? 'Ajuste de entrada' : 'Ajuste de saída');
+        const catId = document.getElementById('mesAddCategory').value;
+
+        if (!amt || amt <= 0) { showToast('Valor inválido'); return; }
+        if (!dataStr) { showToast('Informe a data'); return; }
+
+        // [AJUSTE] Data ao meio-dia local para não cair em outro dia por timezone
+        const d = new Date(dataStr + 'T12:00:00');
+        // [AJUSTE] Confere se o registro cai no ciclo do mês aberto
+        if (getFinancialCycle(d) !== selectedMonth) {
+          showToast('A data precisa pertencer ao ciclo ' + formatMonthLabel(selectedMonth) + '.');
+          return;
+        }
+
+        state.transactions.push({
+          id: generateId(),
+          amount: amt,
+          date: d.toISOString(),
+          type: mesAddTipo,
+          description: desc,
+          categoryId: catId || undefined,
+          historicalAdjustment: true,   // [NOVO] flag que exclui do caixa
+          budgetName: 'Ajuste histórico'
+        });
+
+        document.getElementById('mesAddAmount').value = '';
+        document.getElementById('mesAddDesc').value = '';
+        document.getElementById('mesAddCategory').value = '';
+
+        saveState();
+        // Atualiza lista do modal + relatório por trás
+        renderMesEditList();
+        renderSelectedMonthReport();
+        renderAllCharts();
+        renderHistory();
+        showToast('Ajuste histórico adicionado!');
       });
 
       document.getElementById('settingsCycleSave').addEventListener('click', () => {
