@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
-  <title>Financeiro</title>
+  <title>MyCoin</title>
   <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
   <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
@@ -456,7 +456,7 @@
     }
     .config-row button:hover{filter:brightness(.94)}
 
-    /* [NOVO] Modal de edição em massa do mês */
+    /* Modal de edição em massa do mês */
     .mes-edit-list{display:grid;gap:6px;max-height:60vh;overflow-y:auto;margin-top:8px}
     .mes-edit-linha{
       display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;
@@ -488,7 +488,7 @@
 <body>
   <div id="app">
     <div class="header">
-      <h1><i class="fas fa-wallet"></i>Financeiro</h1>
+      <h1><i class="fas fa-coins"></i>MyCoin</h1>
       <button class="menu-btn" id="menuToggle" aria-label="Abrir menu"><i class="fas fa-bars"></i></button>
     </div>
 
@@ -748,7 +748,6 @@
       </div>
     </div>
 
-    <!-- [NOVO] Modal de edição de todas as transações do mês -->
     <div class="modal-mask" id="modalEditMes">
       <div class="modal-box" style="max-width:520px">
         <h3 id="editMesTitle">Editar entradas e saídas do mês</h3>
@@ -886,7 +885,6 @@
         populateRescueSelects();
         updateJsonTextarea();
         renderMonthFilter();
-        // [NOVO] Se o modal de edição do mês estiver aberto, atualiza a lista dele
         const modalMes = document.getElementById('modalEditMes');
         if (modalMes && modalMes.classList.contains('open') && selectedMonth) {
           renderMesEditList();
@@ -1062,9 +1060,6 @@
         showToast('Transação atualizada!');
       }
 
-      // =========================================================================
-      // [NOVO] Modal "Editar entradas e saídas do mês"
-      // =========================================================================
       function openEditMesModal(mesKey) {
         if (!mesKey) { showToast('Selecione um mês primeiro.'); return; }
         selectedMonth = mesKey;
@@ -1299,7 +1294,6 @@
         }
         const labels = data.map(d => formatMonthLabel(d.name));
 
-        // Home chart scrollável
         renderHomeChartScrollable(data, labels);
 
         createAreaChart('reserveGrowthChart', {
@@ -1385,7 +1379,7 @@
         }
         container.innerHTML = '';
 
-        // 1) Fluxo do mês — [NOVO] com botão "Editar entradas e saídas"
+        // 1) Fluxo do mês
         const fluxBlock = document.createElement('div');
         fluxBlock.className = 'month-report-block';
         fluxBlock.innerHTML = `
@@ -1424,7 +1418,7 @@
           }
         });
 
-        // 2) Saldo mensal (barras scrolláveis)
+        // 2) Saldo mensal
         const balanceBlock = document.createElement('div');
         balanceBlock.className = 'month-report-block';
         balanceBlock.style.marginTop = '18px';
@@ -1434,10 +1428,9 @@
           <div class="balance-summary" id="balanceSummary"></div>
         `;
         container.appendChild(balanceBlock);
-        // [CORREÇÃO] setTimeout garante reflow antes de instanciar o Chart
         setTimeout(() => renderBalanceBarsChart(data), 0);
 
-        // 3) Categorias (barras scrolláveis)
+        // 3) Categorias
         const categoriesBlock = document.createElement('div');
         categoriesBlock.className = 'month-report-block';
         categoriesBlock.style.marginTop = '18px';
@@ -1460,12 +1453,9 @@
             renderCategoriesChart();
           });
         });
-        // [CORREÇÃO] setTimeout garante reflow antes de instanciar o Chart
         setTimeout(() => renderCategoriesChart(), 0);
       }
 
-      // [CORREÇÃO] Chart.js com responsive:false precisa de width/height explícitos.
-      // Aplicamos canvas.width e canvas.height em pixels para garantir renderização.
       function renderCategoriesChart() {
         const canvas = document.getElementById('categoriesChart');
         const inner = document.getElementById('categoriesChartInner');
@@ -1552,19 +1542,15 @@
           }
         });
 
+        // [AJUSTE] Resumo apenas com o saldo total.
         const summaryEl = document.getElementById('balanceSummary');
         if (summaryEl) {
           const totalSaldo = saldos.reduce((a, b) => a + b, 0);
-          const positivos = saldos.filter(s => s > 0).length;
-          const negativos = saldos.filter(s => s < 0).length;
-          const melhorMes = data[saldos.indexOf(Math.max(...saldos))];
-          const piorMes = data[saldos.indexOf(Math.min(...saldos))];
           summaryEl.innerHTML = `
-            <div class="item"><span class="lbl">Saldo total</span><span class="vl ${totalSaldo >= 0 ? 'pos' : 'neg'}">${totalSaldo >= 0 ? '+' : ''}${formatCurrency(totalSaldo)}</span></div>
-            <div class="item"><span class="lbl">Meses +</span><span class="vl pos">${positivos}</span></div>
-            <div class="item"><span class="lbl">Meses −</span><span class="vl neg">${negativos}</span></div>
-            <div class="item"><span class="lbl">Melhor</span><span class="vl pos">${formatMonthShort(melhorMes.name)}</span></div>
-            <div class="item"><span class="lbl">Pior</span><span class="vl neg">${formatMonthShort(piorMes.name)}</span></div>
+            <div class="item" style="min-width:100%">
+              <span class="lbl">Saldo total</span>
+              <span class="vl ${totalSaldo >= 0 ? 'pos' : 'neg'}">${totalSaldo >= 0 ? '+' : ''}${formatCurrency(totalSaldo)}</span>
+            </div>
           `;
         }
       }
