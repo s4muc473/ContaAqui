@@ -841,6 +841,7 @@
         const x = new Date(d);
         return `${x.getFullYear()}-${String(x.getMonth()+1).padStart(2,'0')}-${String(x.getDate()).padStart(2,'0')}`;
       }
+      function isVisible(el) { return !!(el && el.offsetParent !== null); }
 
       function showToast(msg) {
         const el = document.getElementById('toast');
@@ -891,6 +892,9 @@
         }
       }
 
+      // [CORREÇÃO] renderAll agora:
+      // 1. NÃO fecha o modal do mês (é o que está em uso) mas FECHA qualquer modal de edição de transação órfão.
+      // 2. Só re-renderiza o relatório do mês se a aba estiver visível.
       function renderAll() {
         saveState();
         renderBudgets();
@@ -905,10 +909,18 @@
         populateRescueSelects();
         updateJsonTextarea();
         renderMonthFilter();
+
+        // Atualiza a lista do modal do mês, se aberto.
         const modalMes = document.getElementById('modalEditMes');
         if (modalMes && modalMes.classList.contains('open') && selectedMonth) {
           renderMesEditList();
-          renderSelectedMonthReport();
+        }
+
+        // [CORREÇÃO] Só re-renderiza o relatório se a aba Relatórios estiver visível.
+        // Evita criar gráficos em canvas com dimensão 0 quando o usuário está em outra aba.
+        const tabReports = document.getElementById('tabReports');
+        if (tabReports && tabReports.classList.contains('active')) {
+          setTimeout(renderSelectedMonthReport, 0);
         }
       }
 
@@ -948,7 +960,6 @@
         container.querySelectorAll('[data-action="rescue"]').forEach(btn => btn.addEventListener('click', () => openRescueModal(btn.dataset.id)));
       }
 
-      // [AJUSTE] Cards de Entradas/Saídas incluem TODOS os registros do ciclo (com ajustes históricos).
       function renderReports() {
         const cycle = getCycleRange(state.cycleStartDay || 6);
         const totalEntries = state.transactions.filter(t =>
@@ -1064,9 +1075,14 @@
         modal.classList.add('open');
       }
 
+      // [CORREÇÃO] saveEditTx fecha o modal ANTES de renderizar e trata erros de forma atômica.
       function saveEditTx() {
         const t = state.transactions.find(x => x.id === editingTxId);
-        if (!t) return;
+        if (!t) {
+          document.getElementById('modalEditTx').classList.remove('open', 'top-modal');
+          editingTxId = null;
+          return;
+        }
         const novoValor = parseFloat(document.getElementById('editTxAmount').value);
         const novaDesc = document.getElementById('editTxDesc').value.trim();
         const novaCat = document.getElementById('editTxCategory').value;
@@ -1098,9 +1114,11 @@
         d.setHours(hora.getHours(), hora.getMinutes(), 0, 0);
         t.date = d.toISOString();
 
-        document.getElementById('modalEditTx').classList.remove('open');
-        document.getElementById('modalEditTx').classList.remove('top-modal');
+        // [CORREÇÃO] Fecha o modal ANTES de renderizar tudo.
+        const modal = document.getElementById('modalEditTx');
+        modal.classList.remove('open', 'top-modal');
         editingTxId = null;
+
         renderAll();
         showToast('Transação atualizada!');
       }
@@ -1308,8 +1326,6 @@
         }
       }
 
-      // [AJUSTE] buildMonthlyData agora inclui ajustes históricos no fluxo/saldo.
-      // Só ALLOCATION e RESERVE_RESCUE que não existem em ajustes — continuam contando normal.
       function buildMonthlyData() {
         const cycles = {};
         state.transactions.forEach(t => {
@@ -1348,11 +1364,22 @@
         }).sort((a, b) => b.total - a.total);
       }
 
+      // [CORREÇÃO] renderAllCharts agora:
+      //   - Só destrói gráficos cujo canvas sumiu do DOM.
+      //   - Não destrói/reconstrói os gráficos de relatórios aqui (eles são geridos por renderSelectedMonthReport).
       function renderAllCharts() {
         const data = buildMonthlyData();
+
+        // Limpa instâncias órfãs (canvas que sumiu)
         Object.keys(chartInstances).forEach(key => {
-          if (chartInstances[key]) { chartInstances[key].destroy(); delete chartInstances[key]; }
+          const c = chartInstances[key];
+          if (!c) { delete chartInstances[key]; return; }
+          if (!document.body.contains(c.canvas)) {
+            try { c.destroy(); } catch (e) {}
+            delete chartInstances[key];
+          }
         });
+
         if (!data.length) {
           ['homeChart', 'reserveGrowthChart'].forEach(id => {
             const canvas = document.getElementById(id);
@@ -1363,8 +1390,6 @@
               ctx.fillText('Sem dados', canvas.width / 2, canvas.height / 2);
             }
           });
-          const reportsContainer = document.getElementById('reportsContainer');
-          if (reportsContainer) reportsContainer.innerHTML = '<div style="padding:40px 20px;text-align:center;color:var(--muted);"><i class="fas fa-chart-line" style="font-size:32px;margin-bottom:12px;display:block;"></i> Nenhum dado para exibir. Registre entradas e saídas para ver os relatórios.</div>';
           return;
         }
         const labels = data.map(d => formatMonthLabel(d.name));
@@ -1380,22 +1405,41 @@
         });
       }
 
+      // [CORREÇÃO] Sempre define canvas.width/height em pixels ANTES de criar o Chart.
+      // Também destrói qualquer instância antiga para evitar duplicação.
       function renderHomeChartScrollable(data, labels) {
         const canvas = document.getElementById('homeChart');
         const inner = document.getElementById('homeChartInner');
         const scrollWrap = document.getElementById('homeChartScroll');
         if (!canvas || !inner || !scrollWrap) return;
+        if (!isVisible(scrollWrap)) {
+          // Container invisível: só atualiza o Chart existente, sem redimensionar.
+          if (chartInstances['homeChart']) {
+            chartInstances['homeChart'].data.labels = labels;
+            chartInstances['homeChart'].data.datasets[0].data = data.map(d => d.entradas);
+            chartInstances['homeChart'].data.datasets[1].data = data.map(d => d.gastos);
+            chartInstances['homeChart'].update('none');
+          }
+          return;
+        }
 
         const grupoWidth = 110;
         const minWidth = 280;
         const totalWidth = Math.max(minWidth, data.length * grupoWidth + 60);
+        const H = 220;
 
         inner.style.width = totalWidth + 'px';
+        inner.style.height = H + 'px';
         canvas.style.width = totalWidth + 'px';
-        canvas.style.height = '220px';
-        canvas.style.maxHeight = '220px';
+        canvas.style.height = H + 'px';
+        // [CORREÇÃO] Define width/height físicos do canvas.
+        canvas.width = totalWidth;
+        canvas.height = H;
 
-        if (chartInstances['homeChart']) chartInstances['homeChart'].destroy();
+        if (chartInstances['homeChart']) {
+          try { chartInstances['homeChart'].destroy(); } catch (e) {}
+          delete chartInstances['homeChart'];
+        }
         chartInstances['homeChart'] = new Chart(canvas.getContext('2d'), {
           type: 'bar',
           data: {
@@ -1442,6 +1486,9 @@
       function renderSelectedMonthReport() {
         const container = document.getElementById('reportsContainer');
         if (!container) return;
+        // [CORREÇÃO] Se a aba não estiver visível, não renderiza.
+        if (!isVisible(container)) return;
+
         const data = buildMonthlyData();
         if (!data.length) {
           container.innerHTML = '<div style="padding:40px 20px;text-align:center;color:var(--muted);"><i class="fas fa-chart-line" style="font-size:32px;margin-bottom:12px;display:block;"></i> Nenhum dado para exibir.</div>';
@@ -1475,7 +1522,7 @@
         fluxBlock.querySelector('#btn-edit-mes').addEventListener('click', () => openEditMesModal(monthData.name));
 
         const ctxFlux = document.getElementById('monthFluxChart').getContext('2d');
-        if (chartInstances['monthFluxChart']) chartInstances['monthFluxChart'].destroy();
+        if (chartInstances['monthFluxChart']) { try { chartInstances['monthFluxChart'].destroy(); } catch (e) {} delete chartInstances['monthFluxChart']; }
         chartInstances['monthFluxChart'] = new Chart(ctxFlux, {
           type: 'bar',
           data: {
@@ -1532,25 +1579,28 @@
         const canvas = document.getElementById('categoriesChart');
         const inner = document.getElementById('categoriesChartInner');
         if (!canvas || !inner || !selectedMonth) return;
+        if (!isVisible(canvas)) return;
         const totals = buildCategoryTotals(selectedMonth, selectedCategoryType);
         if (totals.length === 0) {
           inner.style.width = '100%';
           canvas.style.width = '100%';
           canvas.style.height = '120px';
-          if (chartInstances['categoriesChart']) { chartInstances['categoriesChart'].destroy(); delete chartInstances['categoriesChart']; }
+          if (chartInstances['categoriesChart']) { try { chartInstances['categoriesChart'].destroy(); } catch (e) {} delete chartInstances['categoriesChart']; }
           const summaryEl = document.getElementById('categoriesSummary');
           if (summaryEl) summaryEl.innerHTML = `<div style="width:100%;text-align:center;color:var(--muted);padding:20px;font-size:13px;"><i class="fas fa-inbox"></i> Nenhuma ${selectedCategoryType === 'ENTRY' ? 'entrada' : 'saída'} categorizada neste mês.</div>`;
           return;
         }
         const barWidth = 60;
         const totalWidth = Math.max(280, totals.length * barWidth + 60);
+        const H = 260;
         inner.style.width = totalWidth + 'px';
+        inner.style.height = H + 'px';
         canvas.style.width = totalWidth + 'px';
+        canvas.style.height = H + 'px';
         canvas.width = totalWidth;
-        canvas.height = 260;
-        canvas.style.height = '260px';
+        canvas.height = H;
 
-        if (chartInstances['categoriesChart']) chartInstances['categoriesChart'].destroy();
+        if (chartInstances['categoriesChart']) { try { chartInstances['categoriesChart'].destroy(); } catch (e) {} delete chartInstances['categoriesChart']; }
         chartInstances['categoriesChart'] = new Chart(canvas.getContext('2d'), {
           type: 'bar',
           data: {
@@ -1583,18 +1633,21 @@
         const canvas = document.getElementById('balanceBarsChart');
         const inner = document.getElementById('balanceChartInner');
         if (!canvas || !inner) return;
+        if (!isVisible(canvas)) return;
         const totalWidth = Math.max(280, data.length * 42 + 60);
+        const H = 260;
         inner.style.width = totalWidth + 'px';
+        inner.style.height = H + 'px';
         canvas.style.width = totalWidth + 'px';
+        canvas.style.height = H + 'px';
         canvas.width = totalWidth;
-        canvas.height = 260;
-        canvas.style.height = '260px';
+        canvas.height = H;
 
         const labels = data.map(d => formatMonthShort(d.name));
         const saldos = data.map(d => d.saldo);
         const colors = saldos.map(s => s >= 0 ? '#16a34a' : '#ea580c');
 
-        if (chartInstances['balanceBarsChart']) chartInstances['balanceBarsChart'].destroy();
+        if (chartInstances['balanceBarsChart']) { try { chartInstances['balanceBarsChart'].destroy(); } catch (e) {} delete chartInstances['balanceBarsChart']; }
         chartInstances['balanceBarsChart'] = new Chart(canvas.getContext('2d'), {
           type: 'bar',
           data: { labels, datasets: [{ label: 'Saldo mensal', data: saldos, backgroundColor: colors, borderRadius: 3, barPercentage: 0.7, categoryPercentage: 0.8 }] },
@@ -1628,8 +1681,15 @@
       function createAreaChart(canvasId, config) {
         const canvas = document.getElementById(canvasId);
         if (!canvas) return;
+        if (!isVisible(canvas)) {
+          if (chartInstances[canvasId]) {
+            chartInstances[canvasId].data = config;
+            chartInstances[canvasId].update('none');
+          }
+          return;
+        }
         const ctx = canvas.getContext('2d');
-        if (chartInstances[canvasId]) chartInstances[canvasId].destroy();
+        if (chartInstances[canvasId]) { try { chartInstances[canvasId].destroy(); } catch (e) {} delete chartInstances[canvasId]; }
         chartInstances[canvasId] = new Chart(ctx, {
           type: 'line',
           data: config,
@@ -1830,8 +1890,8 @@
       });
 
       document.getElementById('editTxCancel').addEventListener('click', () => {
-        document.getElementById('modalEditTx').classList.remove('open');
-        document.getElementById('modalEditTx').classList.remove('top-modal');
+        const modal = document.getElementById('modalEditTx');
+        modal.classList.remove('open', 'top-modal');
         editingTxId = null;
       });
       document.getElementById('editTxConfirm').addEventListener('click', saveEditTx);
@@ -1932,10 +1992,14 @@
 
         saveState();
         renderMesEditList();
-        renderSelectedMonthReport();
         renderAllCharts();
         renderHistory();
         renderReports();
+        // Re-renderiza o relatório se estiver visível
+        const tabReports = document.getElementById('tabReports');
+        if (tabReports && tabReports.classList.contains('active')) {
+          setTimeout(renderSelectedMonthReport, 0);
+        }
         showToast('Ajuste histórico adicionado!');
       });
 
@@ -2043,15 +2107,26 @@
           document.querySelectorAll('.menu-panel button[data-tab]').forEach(b => b.classList.remove('active'));
           btn.classList.add('active');
           if (tabId === 'tabHistory') renderHistory();
-          if (tabId === 'tabReserve') renderReserve();
+          if (tabId === 'tabReserve') { renderReserve(); }
           if (tabId === 'tabEntry') { renderEntryPool(); populateAllocSelects(); renderCategorySelects(); }
-          if (tabId === 'tabReports') { renderMonthFilter(); setTimeout(renderSelectedMonthReport, 100); }
+          if (tabId === 'tabReports') {
+            renderMonthFilter();
+            // [CORREÇÃO] setTimeout para garantir que o container já tenha dimensão
+            setTimeout(() => {
+              renderSelectedMonthReport();
+              renderAllCharts();
+            }, 60);
+          }
           if (tabId === 'tabSettings') renderSettings();
           if (tabId === 'tabHome') {
-            requestAnimationFrame(() => {
-              const sw = document.getElementById('homeChartScroll');
-              if (sw) sw.scrollLeft = sw.scrollWidth;
-            });
+            // [CORREÇÃO] Re-renderiza o gráfico da home já que agora está visível
+            setTimeout(() => {
+              renderAllCharts();
+              requestAnimationFrame(() => {
+                const sw = document.getElementById('homeChartScroll');
+                if (sw) sw.scrollLeft = sw.scrollWidth;
+              });
+            }, 60);
           }
         });
       });
