@@ -201,6 +201,7 @@
       font-family:inherit;min-height:var(--touch);
     }
     .modal-box input:focus,.modal-box select:focus{outline:2px solid var(--accent);outline-offset:2px;border-color:transparent}
+    .modal-box label{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:4px}
     .modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:8px;flex-wrap:wrap}
     .modal-actions button{
       padding:11px 18px;border-radius:var(--radius-sm);border:1px solid var(--line);
@@ -250,7 +251,7 @@
     }
     .reserve-card .balance{font:700 18px/1 var(--display)}
     .reserve-card .info{display:flex;flex-direction:column;gap:2px;flex:1;min-width:0}
-    .reserve-card .name{font-weight:600;font-size:14.5px}
+    .reserve-card .name{font-weight:600;font-size:14.5px;display:flex;align-items:center;gap:8px}
     .reserve-card .actions{display:flex;gap:2px}
     .reserve-card .actions button{
       background:none;border:0;font-size:14px;cursor:pointer;padding:0;
@@ -298,12 +299,14 @@
       font:600 10.5px/1 var(--mono);padding:4px 10px;border-radius:999px;
       background:var(--sunk);color:var(--muted);
     }
-    .category-item .cat-delete{
+    .category-item .cat-delete,
+    .category-item .cat-edit{
       background:none;border:0;color:var(--muted);cursor:pointer;padding:0;
       width:36px;height:36px;border-radius:var(--radius-sm);transition:.1s;
       display:grid;place-items:center;
     }
     .category-item .cat-delete:hover{background:var(--accent-soft);color:var(--accent)}
+    .category-item .cat-edit:hover{background:var(--sunk);color:var(--ink)}
 
     .section-title{
       font-size:16px;font-weight:700;margin-bottom:14px;
@@ -467,6 +470,59 @@
       cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;gap:6px;
       font-family:inherit;min-height:40px;
     }
+
+    /* ============ NOVOS ESTILOS: METAS ============ */
+    .goal-progress{
+      margin-top:6px;
+      background:var(--sunk);
+      height:6px;
+      border-radius:999px;
+      overflow:hidden;
+      width:100%;
+    }
+    .goal-progress .bar{
+      height:100%;
+      background:var(--accent);
+      transition:width .4s ease;
+      border-radius:999px;
+    }
+    .goal-progress .bar.over{background:var(--info)}
+    .goal-meta{
+      font:500 11px/1.2 var(--mono);
+      color:var(--muted);
+      display:flex;
+      justify-content:space-between;
+      margin-top:4px;
+    }
+    .goal-badge{
+      display:inline-flex;align-items:center;gap:5px;
+      font:600 10.5px/1 var(--mono);
+      padding:3px 8px;border-radius:999px;
+      background:var(--accent-soft);color:var(--accent);
+      margin-left:6px;
+    }
+    .goal-badge.reached{background:var(--info-soft);color:var(--info)}
+    .goal-toggle-row{
+      display:flex;align-items:center;gap:10px;
+      background:var(--sunk);
+      border-radius:var(--radius-sm);
+      padding:10px 12px;
+      margin-bottom:12px;
+      font-size:13px;
+      font-weight:600;
+    }
+    .goal-toggle-row input[type="checkbox"]{
+      width:auto;min-height:auto;margin:0;flex-shrink:0;
+    }
+    .reserve-color{
+      width:14px;height:14px;border-radius:50%;flex-shrink:0;
+      border:1px solid rgba(0,0,0,.06);
+    }
+    .goal-entity-tipo{
+      font:600 10.5px/1 var(--mono);
+      padding:3px 8px;border-radius:999px;
+      background:var(--sunk);color:var(--muted);
+    }
   </style>
 </head>
 
@@ -502,6 +558,14 @@
         <div class="report-card">
           <div class="label"><i class="fas fa-arrow-up" style="color:var(--accent)"></i> Saídas</div>
           <div class="value" id="totalExpenses">R$ 0,00</div>
+        </div>
+        <div class="report-card">
+          <div class="label"><i class="fas fa-wallet" style="color:var(--info)"></i> Disponível p/ alocar</div>
+          <div class="value" id="homePoolDisplay">R$ 0,00</div>
+        </div>
+        <div class="report-card">
+          <div class="label"><i class="fas fa-piggy-bank" style="color:var(--violet)"></i> Total em reservas</div>
+          <div class="value" id="homeReservesDisplay">R$ 0,00</div>
         </div>
       </div>
 
@@ -566,6 +630,17 @@
     <!-- RESERVE -->
     <div id="tabReserve" class="tab-content">
       <div id="reserveArea"></div>
+
+      <!-- NOVO: gráfico de metas das reservas -->
+      <div class="reserve-chart-container">
+        <div class="chart-title"><i class="fas fa-bullseye"></i> Acompanhamento de Metas (Reservas)</div>
+        <div class="scrollable-chart" id="reserveGoalsScroll">
+          <div class="scrollable-inner" id="reserveGoalsInner">
+            <canvas id="reserveGoalsChart"></canvas>
+          </div>
+        </div>
+      </div>
+
       <div class="reserve-chart-container">
         <div class="chart-title"><i class="fas fa-chart-area"></i> Crescimento vs Resgates (Reservas)</div>
         <canvas id="reserveGrowthChart"></canvas>
@@ -627,9 +702,10 @@
 
       <div class="config-block">
         <h4><i class="fas fa-piggy-bank"></i> Reservas</h4>
-        <div class="desc">Reservas são valores guardados fora dos orçamentos do dia a dia.</div>
+        <div class="desc">Reservas são valores guardados fora dos orçamentos. Escolha nome e cor.</div>
         <div class="config-row">
           <input type="text" id="settingsReserveName" placeholder="Nome da reserva" maxlength="40">
+          <input type="color" id="settingsReserveColor" value="#7c3aed" aria-label="Cor da reserva">
           <button id="settingsReserveSave"><i class="fas fa-plus"></i> Criar</button>
         </div>
         <div id="settingsReserveList"></div>
@@ -681,7 +757,7 @@
       <div class="modal-box">
         <h3><i class="fas fa-pen"></i> Editar orçamento</h3>
         <input id="modalEditBudgetName" placeholder="Nome">
-        <input id="modalEditBudgetColor" placeholder="Cor (hex)" value="#16a34a">
+        <input type="color" id="modalEditBudgetColor" value="#16a34a">
         <input type="number" id="modalEditBudgetSetBalance" placeholder="Definir saldo manual (R$)" step="0.01">
         <p style="font-size:11px;color:var(--muted);margin-top:-8px;margin-bottom:12px;line-height:1.4;">
           <i class="fas fa-info-circle"></i> A alteração do saldo é apenas uma correção e <strong>não afeta o histórico nem os gráficos</strong>.
@@ -731,10 +807,47 @@
         <h3><i class="fas fa-pen"></i> Editar reserva</h3>
         <input id="editReserveName" placeholder="Nome">
         <input id="editReserveBalance" type="number" step="0.01" placeholder="Saldo (R$)" min="0">
+        <input type="color" id="editReserveColor" value="#7c3aed">
         <div class="modal-actions">
           <button id="editReserveCancel">Cancelar</button>
           <button id="editReserveDelete" class="danger"><i class="fas fa-trash"></i> Excluir</button>
           <button id="editReserveConfirm" class="primary">Salvar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- NOVO: MODAL DE METAS -->
+    <div class="modal-mask top-modal" id="modalEditGoal">
+      <div class="modal-box">
+        <h3><i class="fas fa-bullseye" style="color:var(--accent)"></i> <span id="editGoalTitle">Meta</span></h3>
+        <p style="font-size:12.5px;color:var(--muted);margin-bottom:14px" id="editGoalSub"></p>
+
+        <div class="goal-toggle-row">
+          <input type="checkbox" id="editGoalEnabled">
+          <label for="editGoalEnabled" style="margin:0;cursor:pointer;text-transform:none;letter-spacing:0;font-size:13px;font-weight:600;color:var(--ink)">
+            Ativar meta de atingimento para este item
+          </label>
+        </div>
+
+        <div id="editGoalFields" style="display:none">
+          <label for="editGoalTarget">Valor alvo (R$)</label>
+          <input type="number" id="editGoalTarget" placeholder="Ex: 5000" step="0.01" min="0">
+
+          <label for="editGoalStart">Ciclo inicial</label>
+          <input type="month" id="editGoalStart">
+
+          <label for="editGoalEnd">Ciclo final (opcional)</label>
+          <input type="month" id="editGoalEnd">
+
+          <div style="font-size:11.5px;color:var(--muted);background:var(--sunk);padding:10px;border-radius:var(--radius-sm);line-height:1.5;">
+            <i class="fas fa-info-circle"></i>
+            A meta é <b>acumulada</b>: o progresso considera o saldo atual do item no ciclo. Deixe o ciclo final vazio para meta contínua.
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button id="editGoalCancel">Cancelar</button>
+          <button id="editGoalConfirm" class="primary">Salvar meta</button>
         </div>
       </div>
     </div>
@@ -780,8 +893,10 @@
   <script>
     (function () {
       const STORAGE_KEY = 'financeiro_data';
+      const SCHEMA_VERSION = 2;
 
       let state = {
+        schemaVersion: SCHEMA_VERSION,
         entryPool: 0,
         transactions: [],
         budgets: [],
@@ -794,32 +909,44 @@
       let editingBudgetId = null;
       let editingTxId = null;
       let editingReserveId = null;
+      let editingGoalEntity = null; // { id, kind: 'budget' | 'reserve' }
       let selectedMonth = '';
       let selectedCategoryType = 'EXPENSE';
       let mesAddTipo = 'ENTRY';
 
       function generateId() { return Math.random().toString(36).substring(2, 10) + Date.now().toString(36); }
-      function formatCurrency(v) { return 'R$ ' + Number(v).toFixed(2).replace('.', ','); }
+
+      function formatCurrency(v) {
+        return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(v) || 0);
+      }
+
       function getCycleRange(day) {
         const now = new Date();
-        const year = now.getFullYear();
-        const month = now.getMonth();
-        let start = new Date(year, month, day);
-        let end = new Date(year, month + 1, day - 1);
-        if (now.getDate() < day) {
-          start = new Date(year, month - 1, day);
-          end = new Date(year, month, day - 1);
+        const y = now.getFullYear(), m = now.getMonth();
+        let start = new Date(y, m, day);
+        let end = new Date(y, m + 1, day);
+        end.setDate(end.getDate() - 1);
+        if (now < start) {
+          start = new Date(y, m - 1, day);
+          end = new Date(y, m, day);
+          end.setDate(end.getDate() - 1);
         }
         return { start, end };
       }
+
+      // [FIX] getFinancialCycle sem "mês 0"
       function getFinancialCycle(date) {
         const d = new Date(date);
         const day = state.cycleStartDay || 6;
-        const year = d.getFullYear();
-        const month = d.getMonth();
-        if (d.getDate() < day) return `${year}-${String(month).padStart(2, '0')}`;
+        let year = d.getFullYear();
+        let month = d.getMonth(); // 0-indexed
+        if (d.getDate() < day) {
+          month -= 1;
+          if (month < 0) { month = 11; year -= 1; }
+        }
         return `${year}-${String(month + 1).padStart(2, '0')}`;
       }
+
       function formatMonthLabel(cycleKey) {
         const [y, m] = cycleKey.split('-');
         const date = new Date(parseInt(y), parseInt(m) - 1, 1);
@@ -851,6 +978,39 @@
         el._timeout = setTimeout(() => el.classList.remove('show'), 2500);
       }
 
+      // ====== MIGRAÇÃO / PERSISTÊNCIA ======
+      function migrateState(parsed) {
+        const v = parsed.schemaVersion || 1;
+        if (v < 2) {
+          parsed.categories = parsed.categories || [];
+          parsed.budgets = (parsed.budgets || []).map(b => ({
+            color: '#16a34a',
+            targetAmount: 0,
+            ...b,
+            goal: b.goal || { enabled: false, targetAmount: 0, startCycle: '', endCycle: '' },
+          }));
+          parsed.reserves = (parsed.reserves || []).map((r, i) => ({
+            color: ['#7c3aed','#0d9488','#ea580c','#0369a1','#db2777'][i % 5] || '#7c3aed',
+            ...r,
+            goal: r.goal || { enabled: false, targetAmount: 0, startCycle: '', endCycle: '' },
+          }));
+          parsed.transactions = parsed.transactions || [];
+          parsed.entryPool = parsed.entryPool || 0;
+          parsed.cycleStartDay = parsed.cycleStartDay || 6;
+          parsed.schemaVersion = 2;
+        }
+        // Garante goal em todos, mesmo se veio de v2 sem campo
+        parsed.budgets = (parsed.budgets || []).map(b => ({
+          ...b,
+          goal: b.goal || { enabled: false, targetAmount: 0, startCycle: '', endCycle: '' },
+        }));
+        parsed.reserves = (parsed.reserves || []).map(r => ({
+          ...r,
+          goal: r.goal || { enabled: false, targetAmount: 0, startCycle: '', endCycle: '' },
+        }));
+        return parsed;
+      }
+
       function saveState() {
         try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
         catch (e) { console.warn('Erro ao salvar', e); }
@@ -859,9 +1019,9 @@
         try {
           const saved = localStorage.getItem(STORAGE_KEY);
           if (saved) {
-            const parsed = JSON.parse(saved);
+            let parsed = JSON.parse(saved);
+            parsed = migrateState(parsed);
             state = parsed;
-            if (!state.categories) state.categories = [];
             return true;
           }
         } catch (e) { console.warn('Erro ao carregar', e); }
@@ -871,6 +1031,71 @@
       function getCategoryById(id) { return state.categories.find(c => c.id === id) || null; }
       function getCategoriesByType(type) { return state.categories.filter(c => c.type === type); }
 
+      // ====== METAS ======
+      function goalIsActiveInCycle(goal, cycleKey) {
+        if (!goal || !goal.enabled) return false;
+        if (goal.startCycle && cycleKey < goal.startCycle) return false;
+        if (goal.endCycle && cycleKey > goal.endCycle) return false;
+        return true;
+      }
+      function computeGoalProgress(entity) {
+        if (!entity.goal || !entity.goal.enabled) return null;
+        const target = Number(entity.goal.targetAmount) || 0;
+        if (target <= 0) return null;
+        const current = Number(entity.currentBalance) || 0;
+        const pct = Math.min(100, Math.round((current / target) * 100));
+        return {
+          target,
+          current,
+          pct,
+          remaining: Math.max(0, target - current),
+          reached: current >= target,
+          over: current > target,
+        };
+      }
+
+      function openGoalModal(entity, kind) {
+        editingGoalEntity = { id: entity.id, kind };
+        const g = entity.goal || { enabled: false, targetAmount: 0, startCycle: '', endCycle: '' };
+        document.getElementById('editGoalTitle').textContent =
+          (kind === 'budget' ? 'Meta do orçamento' : 'Meta da reserva');
+        document.getElementById('editGoalSub').textContent =
+          (kind === 'budget' ? 'Orçamento: ' : 'Reserva: ') + entity.name;
+        document.getElementById('editGoalEnabled').checked = !!g.enabled;
+        document.getElementById('editGoalTarget').value = g.targetAmount || '';
+        document.getElementById('editGoalStart').value = g.startCycle || '';
+        document.getElementById('editGoalEnd').value = g.endCycle || '';
+        document.getElementById('editGoalFields').style.display = g.enabled ? 'block' : 'none';
+        document.getElementById('modalEditGoal').classList.add('open');
+      }
+      document.getElementById('editGoalEnabled').addEventListener('change', (e) => {
+        document.getElementById('editGoalFields').style.display = e.target.checked ? 'block' : 'none';
+      });
+      document.getElementById('editGoalCancel').addEventListener('click', () => {
+        document.getElementById('modalEditGoal').classList.remove('open');
+        editingGoalEntity = null;
+      });
+      document.getElementById('editGoalConfirm').addEventListener('click', () => {
+        if (!editingGoalEntity) return;
+        const { id, kind } = editingGoalEntity;
+        const list = kind === 'budget' ? state.budgets : state.reserves;
+        const entity = list.find(x => x.id === id);
+        if (!entity) return;
+        const enabled = document.getElementById('editGoalEnabled').checked;
+        const targetAmount = parseFloat(document.getElementById('editGoalTarget').value) || 0;
+        const startCycle = document.getElementById('editGoalStart').value || '';
+        const endCycle = document.getElementById('editGoalEnd').value || '';
+        if (enabled && (!targetAmount || targetAmount <= 0)) { showToast('Informe um valor alvo > 0.'); return; }
+        if (enabled && !startCycle) { showToast('Informe o ciclo inicial.'); return; }
+        if (enabled && endCycle && endCycle < startCycle) { showToast('Ciclo final deve ser depois do inicial.'); return; }
+        entity.goal = { enabled, targetAmount, startCycle, endCycle };
+        document.getElementById('modalEditGoal').classList.remove('open');
+        editingGoalEntity = null;
+        renderAll();
+        showToast(enabled ? 'Meta salva!' : 'Meta desativada.');
+      });
+
+      // ====== RENDER ======
       function renderCategorySelects() {
         const entrySelect = document.getElementById('entryCategorySelect');
         if (entrySelect) {
@@ -892,41 +1117,50 @@
         }
       }
 
-      // [CORREÇÃO] renderAll agora:
-      // 1. NÃO fecha o modal do mês (é o que está em uso) mas FECHA qualquer modal de edição de transação órfão.
-      // 2. Só re-renderiza o relatório do mês se a aba estiver visível.
+      function destroyChart(key) {
+        if (chartInstances[key]) {
+          try { chartInstances[key].destroy(); } catch (e) {}
+          delete chartInstances[key];
+        }
+      }
+
       function renderAll() {
         saveState();
         renderBudgets();
         renderReports();
         renderHistory();
         renderReserve();
-        renderAllCharts();
-        renderCategorySelects();
         renderSettings();
+        renderCategorySelects();
         populateTransferSelects();
         populateAllocSelects();
         populateRescueSelects();
         updateJsonTextarea();
         renderMonthFilter();
+        updateHomeIndicators();
 
-        // Atualiza a lista do modal do mês, se aberto.
         const modalMes = document.getElementById('modalEditMes');
         if (modalMes && modalMes.classList.contains('open') && selectedMonth) {
           renderMesEditList();
         }
 
-        // [CORREÇÃO] Só re-renderiza o relatório se a aba Relatórios estiver visível.
-        // Evita criar gráficos em canvas com dimensão 0 quando o usuário está em outra aba.
-        const tabReports = document.getElementById('tabReports');
-        if (tabReports && tabReports.classList.contains('active')) {
-          setTimeout(renderSelectedMonthReport, 0);
+        if (isVisible(document.getElementById('tabReports'))) {
+          renderSelectedMonthReport();
+        }
+        if (isVisible(document.getElementById('homeChartScroll')) ||
+            isVisible(document.getElementById('reserveGrowthChart')) ||
+            isVisible(document.getElementById('reserveGoalsChart'))) {
+          renderAllCharts();
         }
       }
 
-      function renderEntryPool() {
-        const el = document.getElementById('entryPoolAllocDisplay');
-        if (el) el.textContent = formatCurrency(state.entryPool || 0);
+      function updateHomeIndicators() {
+        const poolEl = document.getElementById('homePoolDisplay');
+        if (poolEl) poolEl.textContent = formatCurrency(state.entryPool || 0);
+        const resEl = document.getElementById('homeReservesDisplay');
+        if (resEl) resEl.textContent = formatCurrency(state.reserves.reduce((a, r) => a + (r.currentBalance || 0), 0));
+        const allocEl = document.getElementById('entryPoolAllocDisplay');
+        if (allocEl) allocEl.textContent = formatCurrency(state.entryPool || 0);
       }
 
       function renderBudgets() {
@@ -939,13 +1173,25 @@
         state.budgets.forEach(b => {
           const div = document.createElement('div');
           div.className = 'budget-item';
+          const prog = computeGoalProgress(b);
+          const progressHtml = prog ? `
+            <div class="goal-progress"><div class="bar${prog.over ? ' over' : ''}" style="width:${prog.pct}%"></div></div>
+            <div class="goal-meta">
+              <span>Meta: ${formatCurrency(prog.target)} · ${prog.pct}%</span>
+              <span>${prog.reached ? '✓ atingida' : 'faltam ' + formatCurrency(prog.remaining)}</span>
+            </div>` : '';
           div.innerHTML = `
-          <div class="budget-left">
-            <span class="budget-color" style="background:${b.color || '#16a34a'}"></span>
-            <span class="budget-name">${escapeHtml(b.name)}</span>
-            <span class="budget-balance">${formatCurrency(b.currentBalance)}</span>
+          <div class="budget-left" style="flex-direction:column;align-items:stretch;gap:4px">
+            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+              <span class="budget-color" style="background:${b.color || '#16a34a'}"></span>
+              <span class="budget-name">${escapeHtml(b.name)}</span>
+              ${prog ? `<span class="goal-badge${prog.reached ? ' reached' : ''}"><i class="fas fa-bullseye"></i> meta</span>` : ''}
+              <span class="budget-balance" style="margin-left:auto">${formatCurrency(b.currentBalance)}</span>
+            </div>
+            ${progressHtml}
           </div>
           <div class="budget-actions">
+            <button data-action="goal" data-id="${b.id}" title="Meta"><i class="fas fa-bullseye" style="color:${b.goal?.enabled ? 'var(--accent)' : 'var(--muted)'}"></i></button>
             <button data-action="expense" data-id="${b.id}" title="Saída"><i class="fas fa-arrow-up" style="color:var(--accent)"></i></button>
             <button data-action="editBudget" data-id="${b.id}" title="Config"><i class="fas fa-pen"></i></button>
             <button data-action="transfer" data-id="${b.id}" title="Transferir"><i class="fas fa-right-left"></i></button>
@@ -954,6 +1200,10 @@
         `;
           container.appendChild(div);
         });
+        container.querySelectorAll('[data-action="goal"]').forEach(btn => btn.addEventListener('click', () => {
+          const b = state.budgets.find(x => x.id === btn.dataset.id);
+          if (b) openGoalModal(b, 'budget');
+        }));
         container.querySelectorAll('[data-action="expense"]').forEach(btn => btn.addEventListener('click', () => openExpenseModal(btn.dataset.id)));
         container.querySelectorAll('[data-action="editBudget"]').forEach(btn => btn.addEventListener('click', () => openEditBudgetModal(btn.dataset.id)));
         container.querySelectorAll('[data-action="transfer"]').forEach(btn => btn.addEventListener('click', () => openTransferModal(btn.dataset.id)));
@@ -1018,6 +1268,7 @@
         container.querySelectorAll('.history-edit-btn').forEach(btn => btn.addEventListener('click', () => openEditTxModal(btn.dataset.editId)));
       }
 
+      // [FIX] exclusão de ALLOCATION reverte ao pool quando aplicável
       function deleteTransaction(transactionId) {
         const t = state.transactions.find(tx => tx.id === transactionId);
         if (!t) return;
@@ -1026,23 +1277,31 @@
           if (t.type === 'ENTRY') {
             state.entryPool = Math.max(0, (state.entryPool || 0) - t.amount);
           } else if (t.type === 'EXPENSE') {
-            if (t.fromId) { const budget = state.budgets.find(b => b.id === t.fromId); if (budget) budget.currentBalance = (budget.currentBalance || 0) + t.amount; }
+            if (t.fromId) { const b = state.budgets.find(x => x.id === t.fromId); if (b) b.currentBalance = (b.currentBalance || 0) + t.amount; }
           } else if (t.type === 'ALLOCATION') {
-            if (t.toId) {
-              const budget = state.budgets.find(b => b.id === t.toId);
-              if (budget) budget.currentBalance = Math.max(0, (budget.currentBalance || 0) - t.amount);
-              const reserve = state.reserves.find(r => r.id === t.toId);
-              if (reserve) reserve.currentBalance = Math.max(0, (reserve.currentBalance || 0) - t.amount);
-            }
-            if (t.fromId && t.toId && state.budgets.some(b => b.id === t.fromId) && state.budgets.some(b => b.id === t.toId)) {
-              const fromB = state.budgets.find(b => b.id === t.fromId);
-              const toB = state.budgets.find(b => b.id === t.toId);
-              if (fromB) fromB.currentBalance = (fromB.currentBalance || 0) + t.amount;
-              if (toB) toB.currentBalance = Math.max(0, (toB.currentBalance || 0) - t.amount);
+            const toIsReserve = state.reserves.some(r => r.id === t.toId);
+            const toIsBudget  = state.budgets.some(b => b.id === t.toId);
+            const fromIsBudget = state.budgets.some(b => b.id === t.fromId);
+            if (toIsReserve) {
+              const r = state.reserves.find(x => x.id === t.toId);
+              if (r) r.currentBalance = Math.max(0, (r.currentBalance || 0) - t.amount);
+              if (!t.fromId) state.entryPool = (state.entryPool || 0) + t.amount;
+              else if (fromIsBudget) {
+                const fb = state.budgets.find(x => x.id === t.fromId);
+                if (fb) fb.currentBalance += t.amount;
+              }
+            } else if (toIsBudget) {
+              const tb = state.budgets.find(x => x.id === t.toId);
+              if (tb) tb.currentBalance = Math.max(0, (tb.currentBalance || 0) - t.amount);
+              if (!t.fromId) state.entryPool = (state.entryPool || 0) + t.amount;
+              else if (fromIsBudget) {
+                const fb = state.budgets.find(x => x.id === t.fromId);
+                if (fb) fb.currentBalance += t.amount;
+              }
             }
           } else if (t.type === 'RESERVE_RESCUE') {
-            if (t.fromId) { const reserve = state.reserves.find(r => r.id === t.fromId); if (reserve) reserve.currentBalance = (reserve.currentBalance || 0) + t.amount; }
-            if (t.toId) { const budget = state.budgets.find(b => b.id === t.toId); if (budget) budget.currentBalance = Math.max(0, (budget.currentBalance || 0) - t.amount); }
+            if (t.fromId) { const r = state.reserves.find(x => x.id === t.fromId); if (r) r.currentBalance = (r.currentBalance || 0) + t.amount; }
+            if (t.toId) { const b = state.budgets.find(x => x.id === t.toId); if (b) b.currentBalance = Math.max(0, (b.currentBalance || 0) - t.amount); }
           }
         }
         state.transactions = state.transactions.filter(tx => tx.id !== transactionId);
@@ -1075,7 +1334,6 @@
         modal.classList.add('open');
       }
 
-      // [CORREÇÃO] saveEditTx fecha o modal ANTES de renderizar e trata erros de forma atômica.
       function saveEditTx() {
         const t = state.transactions.find(x => x.id === editingTxId);
         if (!t) {
@@ -1096,7 +1354,9 @@
 
         if (!isHistorical) {
           if (t.type === 'ENTRY') {
-            state.entryPool = Math.max(0, (state.entryPool || 0) + diff);
+            const novoPool = (state.entryPool || 0) + diff;
+            if (novoPool < 0) { showToast('Não é possível reduzir: parte já foi alocada.'); return; }
+            state.entryPool = novoPool;
           } else if (t.type === 'EXPENSE') {
             const b = state.budgets.find(x => x.id === t.fromId);
             if (b) {
@@ -1114,11 +1374,8 @@
         d.setHours(hora.getHours(), hora.getMinutes(), 0, 0);
         t.date = d.toISOString();
 
-        // [CORREÇÃO] Fecha o modal ANTES de renderizar tudo.
-        const modal = document.getElementById('modalEditTx');
-        modal.classList.remove('open', 'top-modal');
+        document.getElementById('modalEditTx').classList.remove('open', 'top-modal');
         editingTxId = null;
-
         renderAll();
         showToast('Transação atualizada!');
       }
@@ -1147,7 +1404,6 @@
           b.classList.toggle('active', b.dataset.tipo === 'ENTRY');
         });
         atualizarCategoriasMesAdd();
-
         renderMesEditList();
         document.getElementById('modalEditMes').classList.add('open');
       }
@@ -1215,22 +1471,40 @@
         container.innerHTML = '';
         if (!state.reserves.length) {
           container.innerHTML = '<div style="padding:20px;background:var(--sunk);border-radius:var(--radius);text-align:center;color:var(--muted);font-size:13px;"><i class="fas fa-piggy-bank"></i> Nenhuma reserva. Crie uma em <b>Configurações</b>.</div>';
-          return;
+        } else {
+          state.reserves.forEach(r => {
+            const div = document.createElement('div');
+            div.className = 'reserve-card';
+            const prog = computeGoalProgress(r);
+            const progressHtml = prog ? `
+              <div class="goal-progress"><div class="bar${prog.over ? ' over' : ''}" style="width:${prog.pct}%"></div></div>
+              <div class="goal-meta">
+                <span>Meta: ${formatCurrency(prog.target)} · ${prog.pct}%</span>
+                <span>${prog.reached ? '✓ atingida' : 'faltam ' + formatCurrency(prog.remaining)}</span>
+              </div>` : '';
+            div.innerHTML = `
+            <div class="info">
+              <span class="name">
+                <span class="reserve-color" style="background:${r.color || '#7c3aed'}"></span>
+                ${escapeHtml(r.name)}
+                ${prog ? `<span class="goal-badge${prog.reached ? ' reached' : ''}"><i class="fas fa-bullseye"></i> meta</span>` : ''}
+              </span>
+              <span class="balance">${formatCurrency(r.currentBalance)}</span>
+              ${progressHtml}
+            </div>
+            <div class="actions">
+              <button data-reserve-goal="${r.id}" title="Meta"><i class="fas fa-bullseye" style="color:${r.goal?.enabled ? 'var(--accent)' : 'var(--muted)'}"></i></button>
+              <button data-reserve-edit="${r.id}" title="Editar"><i class="fas fa-pen"></i></button>
+            </div>`;
+            container.appendChild(div);
+          });
+          container.querySelectorAll('[data-reserve-edit]').forEach(btn => btn.addEventListener('click', () => openEditReserveModal(btn.dataset.reserveEdit)));
+          container.querySelectorAll('[data-reserve-goal]').forEach(btn => btn.addEventListener('click', () => {
+            const r = state.reserves.find(x => x.id === btn.dataset.reserveGoal);
+            if (r) openGoalModal(r, 'reserve');
+          }));
         }
-        state.reserves.forEach(r => {
-          const div = document.createElement('div');
-          div.className = 'reserve-card';
-          div.innerHTML = `
-          <div class="info">
-            <span class="name">${escapeHtml(r.name)}</span>
-            <span class="balance">${formatCurrency(r.currentBalance)}</span>
-          </div>
-          <div class="actions">
-            <button data-reserve-edit="${r.id}" title="Editar"><i class="fas fa-pen"></i></button>
-          </div>`;
-          container.appendChild(div);
-        });
-        container.querySelectorAll('[data-reserve-edit]').forEach(btn => btn.addEventListener('click', () => openEditReserveModal(btn.dataset.reserveEdit)));
+
         const total = state.reserves.reduce((a, r) => a + r.currentBalance, 0);
         const graphDiv = document.createElement('div');
         graphDiv.style.cssText = 'margin-top:16px;background:var(--sunk);padding:16px;border-radius:var(--radius);border:1px solid var(--line);';
@@ -1248,13 +1522,23 @@
           if (!state.budgets.length) bList.innerHTML = '<div style="padding:10px 0;color:var(--muted);font-size:13px;">Nenhum orçamento criado.</div>';
           else {
             state.budgets.forEach(b => {
+              const hasGoal = b.goal?.enabled;
               const div = document.createElement('div');
               div.className = 'category-item';
-              div.innerHTML = `<div class="cat-left"><span class="cat-dot" style="background:${b.color || '#16a34a'}"></span><span class="cat-name">${escapeHtml(b.name)}</span></div>
+              div.innerHTML = `<div class="cat-left">
+                  <span class="cat-dot" style="background:${b.color || '#16a34a'}"></span>
+                  <span class="cat-name">${escapeHtml(b.name)}</span>
+                  ${hasGoal ? `<span class="goal-badge"><i class="fas fa-bullseye"></i> meta</span>` : ''}
+                </div>
                 <span class="cat-type">${formatCurrency(b.currentBalance)}</span>
+                <button class="cat-edit" data-goal-budget="${b.id}" title="Meta"><i class="fas fa-bullseye" style="color:${hasGoal ? 'var(--accent)' : 'var(--muted)'}"></i></button>
                 <button class="cat-delete" data-del-budget="${b.id}" title="Excluir"><i class="fas fa-trash"></i></button>`;
               bList.appendChild(div);
             });
+            bList.querySelectorAll('[data-goal-budget]').forEach(btn => btn.addEventListener('click', () => {
+              const b = state.budgets.find(x => x.id === btn.dataset.goalBudget);
+              if (b) openGoalModal(b, 'budget');
+            }));
             bList.querySelectorAll('[data-del-budget]').forEach(btn => {
               btn.addEventListener('click', () => {
                 const b = state.budgets.find(x => x.id === btn.dataset.delBudget);
@@ -1273,13 +1557,23 @@
           if (!state.reserves.length) rList.innerHTML = '<div style="padding:10px 0;color:var(--muted);font-size:13px;">Nenhuma reserva criada.</div>';
           else {
             state.reserves.forEach(r => {
+              const hasGoal = r.goal?.enabled;
               const div = document.createElement('div');
               div.className = 'category-item';
-              div.innerHTML = `<div class="cat-left"><span class="cat-dot" style="background:var(--accent)"></span><span class="cat-name">${escapeHtml(r.name)}</span></div>
+              div.innerHTML = `<div class="cat-left">
+                  <span class="cat-dot" style="background:${r.color || '#7c3aed'}"></span>
+                  <span class="cat-name">${escapeHtml(r.name)}</span>
+                  ${hasGoal ? `<span class="goal-badge"><i class="fas fa-bullseye"></i> meta</span>` : ''}
+                </div>
                 <span class="cat-type">${formatCurrency(r.currentBalance)}</span>
+                <button class="cat-edit" data-goal-reserve="${r.id}" title="Meta"><i class="fas fa-bullseye" style="color:${hasGoal ? 'var(--accent)' : 'var(--muted)'}"></i></button>
                 <button class="cat-delete" data-del-reserve="${r.id}" title="Excluir"><i class="fas fa-trash"></i></button>`;
               rList.appendChild(div);
             });
+            rList.querySelectorAll('[data-goal-reserve]').forEach(btn => btn.addEventListener('click', () => {
+              const r = state.reserves.find(x => x.id === btn.dataset.goalReserve);
+              if (r) openGoalModal(r, 'reserve');
+            }));
             rList.querySelectorAll('[data-del-reserve]').forEach(btn => {
               btn.addEventListener('click', () => {
                 const r = state.reserves.find(x => x.id === btn.dataset.delReserve);
@@ -1349,6 +1643,17 @@
         return sorted;
       }
 
+      // Metas agregadas por ciclo (soma de metas ativas no ciclo, proporcionais ao range)
+      function buildGoalsAggregateByCycle(cycles) {
+        return cycles.map(c => {
+          let target = 0;
+          state.budgets.concat(state.reserves).forEach(e => {
+            if (goalIsActiveInCycle(e.goal, c.name)) target += Number(e.goal.targetAmount) || 0;
+          });
+          return { cycle: c.name, target, current: (state.budgets.concat(state.reserves)).reduce((a, e) => a + (e.currentBalance || 0), 0) };
+        });
+      }
+
       function buildCategoryTotals(monthKey, type) {
         const totals = {};
         state.transactions.forEach(t => {
@@ -1364,13 +1669,10 @@
         }).sort((a, b) => b.total - a.total);
       }
 
-      // [CORREÇÃO] renderAllCharts agora:
-      //   - Só destrói gráficos cujo canvas sumiu do DOM.
-      //   - Não destrói/reconstrói os gráficos de relatórios aqui (eles são geridos por renderSelectedMonthReport).
       function renderAllCharts() {
         const data = buildMonthlyData();
 
-        // Limpa instâncias órfãs (canvas que sumiu)
+        // Limpa instâncias órfãs
         Object.keys(chartInstances).forEach(key => {
           const c = chartInstances[key];
           if (!c) { delete chartInstances[key]; return; }
@@ -1381,9 +1683,9 @@
         });
 
         if (!data.length) {
-          ['homeChart', 'reserveGrowthChart'].forEach(id => {
+          ['homeChart', 'reserveGrowthChart', 'reserveGoalsChart'].forEach(id => {
             const canvas = document.getElementById(id);
-            if (canvas) {
+            if (canvas && isVisible(canvas)) {
               const ctx = canvas.getContext('2d');
               ctx.clearRect(0, 0, canvas.width, canvas.height);
               ctx.fillStyle = '#5e6b5c'; ctx.font = '14px IBM Plex Sans'; ctx.textAlign = 'center';
@@ -1396,24 +1698,121 @@
 
         renderHomeChartScrollable(data, labels);
 
-        createAreaChart('reserveGrowthChart', {
-          labels,
-          datasets: [
-            { label: 'Crescimento (Depósitos)', data: data.map(d => d.crescimento), backgroundColor: 'rgba(22,163,74,0.15)', borderColor: '#16a34a', fill: true, tension: 0.3 },
-            { label: 'Resgates', data: data.map(d => d.resgates), borderColor: '#ea580c', borderDash: [5, 5], fill: false, tension: 0.3 }
-          ]
+        if (isVisible(document.getElementById('reserveGrowthChart'))) {
+          createAreaChart('reserveGrowthChart', {
+            labels,
+            datasets: [
+              { label: 'Crescimento (Depósitos)', data: data.map(d => d.crescimento), backgroundColor: 'rgba(22,163,74,0.15)', borderColor: '#16a34a', fill: true, tension: 0.3 },
+              { label: 'Resgates', data: data.map(d => d.resgates), borderColor: '#ea580c', borderDash: [5, 5], fill: false, tension: 0.3 }
+            ]
+          });
+        }
+
+        // NOVO: gráfico de metas (barras por ciclo: realizado x meta)
+        if (isVisible(document.getElementById('reserveGoalsChart'))) {
+          renderGoalsChart(data);
+        }
+      }
+
+      function renderGoalsChart(data) {
+        const canvas = document.getElementById('reserveGoalsChart');
+        const inner = document.getElementById('reserveGoalsInner');
+        if (!canvas || !inner) return;
+
+        const goalsAgg = buildGoalsAggregateByCycle(data);
+        const hasAnyGoal = goalsAgg.some(g => g.target > 0);
+        if (!hasAnyGoal) {
+          inner.style.width = '100%';
+          canvas.style.width = '100%';
+          canvas.style.height = '220px';
+          destroyChart('reserveGoalsChart');
+          const ctx = canvas.getContext('2d');
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          ctx.fillStyle = '#5e6b5c';
+          ctx.font = '13px IBM Plex Sans';
+          ctx.textAlign = 'center';
+          ctx.fillText('Nenhuma meta ativa. Ative uma meta em um orçamento ou reserva.', canvas.width / 2, 100);
+          return;
+        }
+
+        const grupoWidth = 110;
+        const totalWidth = Math.max(280, data.length * grupoWidth + 60);
+        const H = 220;
+        inner.style.width = totalWidth + 'px';
+        inner.style.height = H + 'px';
+        canvas.style.width = totalWidth + 'px';
+        canvas.style.height = H + 'px';
+        canvas.width = totalWidth;
+        canvas.height = H;
+
+        destroyChart('reserveGoalsChart');
+        chartInstances['reserveGoalsChart'] = new Chart(canvas.getContext('2d'), {
+          type: 'bar',
+          data: {
+            labels: data.map(d => formatMonthLabel(d.name)),
+            datasets: [
+              {
+                label: 'Meta agregada',
+                data: goalsAgg.map(g => g.target),
+                backgroundColor: 'rgba(124,58,237,0.25)',
+                borderColor: '#7c3aed',
+                borderWidth: 2,
+                borderRadius: 4,
+                barPercentage: 0.7,
+                categoryPercentage: 0.7,
+              },
+              {
+                label: 'Saldo em reservas',
+                data: data.map(d => data.reduce((a, x) => a, 0) && 0) , // placeholder, calculado abaixo
+                backgroundColor: '#16a34a',
+                borderRadius: 4,
+                barPercentage: 0.7,
+                categoryPercentage: 0.7,
+              }
+            ]
+          },
+          options: {
+            responsive: false, maintainAspectRatio: false, animation: { duration: 300 },
+            plugins: {
+              legend: { labels: { boxWidth: 12, padding: 8, font: { size: 10, family: 'IBM Plex Sans' } } },
+              tooltip: { callbacks: { label: ctx => ctx.dataset.label + ': ' + formatCurrency(ctx.raw) } }
+            },
+            scales: {
+              y: { beginAtZero: true, grid: { color: '#eaf0e7' }, ticks: { font: { size: 9, family: 'IBM Plex Mono' }, callback: v => 'R$ ' + v.toFixed(0) } },
+              x: { grid: { display: false }, ticks: { font: { size: 9 }, maxRotation: 0, minRotation: 0, autoSkip: false } }
+            }
+          }
+        });
+
+        // Ajusta dataset de saldo em reservas por ciclo
+        const chart = chartInstances['reserveGoalsChart'];
+        chart.data.datasets[1].data = data.map(d => {
+          // Soma de saldo acumulado em reservas até aquele ciclo
+          let total = 0;
+          state.transactions.forEach(t => {
+            if (t.type === 'ALLOCATION' && state.reserves.some(r => r.id === t.toId)) {
+              if (getFinancialCycle(new Date(t.date)) <= d.name) total += t.amount;
+            }
+            if (t.type === 'RESERVE_RESCUE') {
+              if (getFinancialCycle(new Date(t.date)) <= d.name) total -= t.amount;
+            }
+          });
+          return Math.max(0, total);
+        });
+        chart.update('none');
+
+        requestAnimationFrame(() => {
+          const sw = document.getElementById('reserveGoalsScroll');
+          if (sw) sw.scrollLeft = 0;
         });
       }
 
-      // [CORREÇÃO] Sempre define canvas.width/height em pixels ANTES de criar o Chart.
-      // Também destrói qualquer instância antiga para evitar duplicação.
       function renderHomeChartScrollable(data, labels) {
         const canvas = document.getElementById('homeChart');
         const inner = document.getElementById('homeChartInner');
         const scrollWrap = document.getElementById('homeChartScroll');
         if (!canvas || !inner || !scrollWrap) return;
         if (!isVisible(scrollWrap)) {
-          // Container invisível: só atualiza o Chart existente, sem redimensionar.
           if (chartInstances['homeChart']) {
             chartInstances['homeChart'].data.labels = labels;
             chartInstances['homeChart'].data.datasets[0].data = data.map(d => d.entradas);
@@ -1432,14 +1831,10 @@
         inner.style.height = H + 'px';
         canvas.style.width = totalWidth + 'px';
         canvas.style.height = H + 'px';
-        // [CORREÇÃO] Define width/height físicos do canvas.
         canvas.width = totalWidth;
         canvas.height = H;
 
-        if (chartInstances['homeChart']) {
-          try { chartInstances['homeChart'].destroy(); } catch (e) {}
-          delete chartInstances['homeChart'];
-        }
+        destroyChart('homeChart');
         chartInstances['homeChart'] = new Chart(canvas.getContext('2d'), {
           type: 'bar',
           data: {
@@ -1486,7 +1881,6 @@
       function renderSelectedMonthReport() {
         const container = document.getElementById('reportsContainer');
         if (!container) return;
-        // [CORREÇÃO] Se a aba não estiver visível, não renderiza.
         if (!isVisible(container)) return;
 
         const data = buildMonthlyData();
@@ -1521,9 +1915,8 @@
 
         fluxBlock.querySelector('#btn-edit-mes').addEventListener('click', () => openEditMesModal(monthData.name));
 
-        const ctxFlux = document.getElementById('monthFluxChart').getContext('2d');
-        if (chartInstances['monthFluxChart']) { try { chartInstances['monthFluxChart'].destroy(); } catch (e) {} delete chartInstances['monthFluxChart']; }
-        chartInstances['monthFluxChart'] = new Chart(ctxFlux, {
+        destroyChart('monthFluxChart');
+        chartInstances['monthFluxChart'] = new Chart(document.getElementById('monthFluxChart').getContext('2d'), {
           type: 'bar',
           data: {
             labels: ['Entradas', 'Saídas'],
@@ -1538,6 +1931,36 @@
             }
           }
         });
+
+        // NOVO: card de metas do mês
+        const goalsInMonth = state.budgets.concat(state.reserves).filter(e => goalIsActiveInCycle(e.goal, monthData.name));
+        if (goalsInMonth.length) {
+          const goalsBlock = document.createElement('div');
+          goalsBlock.className = 'month-report-block';
+          goalsBlock.style.marginTop = '18px';
+          goalsBlock.innerHTML = `
+            <div class="month-report-header"><h4><i class="fas fa-bullseye" style="color:var(--violet)"></i> Metas ativas no ciclo</h4></div>
+            <div style="display:grid;gap:10px">
+              ${goalsInMonth.map(e => {
+                const prog = computeGoalProgress(e);
+                const isReserve = state.reserves.some(r => r.id === e.id);
+                const color = e.color || (isReserve ? '#7c3aed' : '#16a34a');
+                return `<div>
+                  <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:4px">
+                    <div style="display:flex;align-items:center;gap:8px;min-width:0">
+                      <span style="width:10px;height:10px;border-radius:50%;background:${color};flex-shrink:0"></span>
+                      <strong style="font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(e.name)}</strong>
+                      <span class="goal-entity-tipo">${isReserve ? 'Reserva' : 'Orçamento'}</span>
+                    </div>
+                    <span style="font:600 12px var(--mono);color:${prog.reached ? 'var(--info)' : 'var(--muted)'}">${formatCurrency(e.currentBalance)} / ${formatCurrency(prog.target)}</span>
+                  </div>
+                  <div class="goal-progress"><div class="bar${prog.over ? ' over' : ''}" style="width:${prog.pct}%"></div></div>
+                </div>`;
+              }).join('')}
+            </div>
+          `;
+          container.appendChild(goalsBlock);
+        }
 
         const balanceBlock = document.createElement('div');
         balanceBlock.className = 'month-report-block';
@@ -1585,7 +2008,7 @@
           inner.style.width = '100%';
           canvas.style.width = '100%';
           canvas.style.height = '120px';
-          if (chartInstances['categoriesChart']) { try { chartInstances['categoriesChart'].destroy(); } catch (e) {} delete chartInstances['categoriesChart']; }
+          destroyChart('categoriesChart');
           const summaryEl = document.getElementById('categoriesSummary');
           if (summaryEl) summaryEl.innerHTML = `<div style="width:100%;text-align:center;color:var(--muted);padding:20px;font-size:13px;"><i class="fas fa-inbox"></i> Nenhuma ${selectedCategoryType === 'ENTRY' ? 'entrada' : 'saída'} categorizada neste mês.</div>`;
           return;
@@ -1600,7 +2023,7 @@
         canvas.width = totalWidth;
         canvas.height = H;
 
-        if (chartInstances['categoriesChart']) { try { chartInstances['categoriesChart'].destroy(); } catch (e) {} delete chartInstances['categoriesChart']; }
+        destroyChart('categoriesChart');
         chartInstances['categoriesChart'] = new Chart(canvas.getContext('2d'), {
           type: 'bar',
           data: {
@@ -1647,7 +2070,7 @@
         const saldos = data.map(d => d.saldo);
         const colors = saldos.map(s => s >= 0 ? '#16a34a' : '#ea580c');
 
-        if (chartInstances['balanceBarsChart']) { try { chartInstances['balanceBarsChart'].destroy(); } catch (e) {} delete chartInstances['balanceBarsChart']; }
+        destroyChart('balanceBarsChart');
         chartInstances['balanceBarsChart'] = new Chart(canvas.getContext('2d'), {
           type: 'bar',
           data: { labels, datasets: [{ label: 'Saldo mensal', data: saldos, backgroundColor: colors, borderRadius: 3, barPercentage: 0.7, categoryPercentage: 0.8 }] },
@@ -1688,9 +2111,8 @@
           }
           return;
         }
-        const ctx = canvas.getContext('2d');
-        if (chartInstances[canvasId]) { try { chartInstances[canvasId].destroy(); } catch (e) {} delete chartInstances[canvasId]; }
-        chartInstances[canvasId] = new Chart(ctx, {
+        destroyChart(canvasId);
+        chartInstances[canvasId] = new Chart(canvas.getContext('2d'), {
           type: 'line',
           data: config,
           options: {
@@ -1811,6 +2233,7 @@
         if (!r) return;
         document.getElementById('editReserveName').value = r.name;
         document.getElementById('editReserveBalance').value = r.currentBalance;
+        document.getElementById('editReserveColor').value = r.color || '#7c3aed';
         document.getElementById('modalEditReserve').classList.add('open');
       }
       document.getElementById('editReserveCancel').addEventListener('click', () => {
@@ -1821,8 +2244,10 @@
         if (!r) return;
         const name = document.getElementById('editReserveName').value.trim();
         const bal = parseFloat(document.getElementById('editReserveBalance').value);
+        const color = document.getElementById('editReserveColor').value;
         if (name) r.name = name;
         if (!isNaN(bal) && bal >= 0) r.currentBalance = bal;
+        if (color) r.color = color;
         document.getElementById('modalEditReserve').classList.remove('open');
         editingReserveId = null;
         renderAll();
@@ -1995,10 +2420,8 @@
         renderAllCharts();
         renderHistory();
         renderReports();
-        // Re-renderiza o relatório se estiver visível
-        const tabReports = document.getElementById('tabReports');
-        if (tabReports && tabReports.classList.contains('active')) {
-          setTimeout(renderSelectedMonthReport, 0);
+        if (isVisible(document.getElementById('tabReports'))) {
+          renderSelectedMonthReport();
         }
         showToast('Ajuste histórico adicionado!');
       });
@@ -2014,15 +2437,23 @@
         const name = document.getElementById('settingsBudgetName').value.trim();
         const color = document.getElementById('settingsBudgetColor').value.trim() || '#16a34a';
         if (!name) { showToast('Nome obrigatório'); return; }
-        state.budgets.push({ id: 'budget-' + generateId(), name, type: 'CUSTOM', targetAmount: 0, currentBalance: 0, color });
+        state.budgets.push({
+          id: 'budget-' + generateId(), name, type: 'CUSTOM',
+          targetAmount: 0, currentBalance: 0, color,
+          goal: { enabled: false, targetAmount: 0, startCycle: '', endCycle: '' }
+        });
         document.getElementById('settingsBudgetName').value = '';
         renderAll();
         showToast('Orçamento criado!');
       });
       document.getElementById('settingsReserveSave').addEventListener('click', () => {
         const name = document.getElementById('settingsReserveName').value.trim();
+        const color = document.getElementById('settingsReserveColor').value.trim() || '#7c3aed';
         if (!name) { showToast('Nome obrigatório'); return; }
-        state.reserves.push({ id: 'reserve-' + generateId(), name, currentBalance: 0 });
+        state.reserves.push({
+          id: 'reserve-' + generateId(), name, currentBalance: 0, color,
+          goal: { enabled: false, targetAmount: 0, startCycle: '', endCycle: '' }
+        });
         document.getElementById('settingsReserveName').value = '';
         renderAll();
         showToast('Reserva criada!');
@@ -2065,6 +2496,23 @@
           showToast('JSON copiado!');
         });
       });
+
+      function isValidState(data) {
+        return data && typeof data === 'object'
+          && Array.isArray(data.transactions)
+          && Array.isArray(data.budgets)
+          && Array.isArray(data.reserves)
+          && (data.categories === undefined || Array.isArray(data.categories));
+      }
+
+      function applyImportedState(data) {
+        if (!isValidState(data)) { showToast('JSON inválido: campos obrigatórios ausentes.'); return false; }
+        state = migrateState(data);
+        renderAll();
+        showToast('Dados importados com sucesso!');
+        return true;
+      }
+
       document.getElementById('importJsonBtn').addEventListener('click', () => document.getElementById('fileInput').click());
       document.getElementById('fileInput').addEventListener('change', (e) => {
         const file = e.target.files[0];
@@ -2073,12 +2521,7 @@
         reader.onload = (ev) => {
           try {
             const data = JSON.parse(ev.target.result);
-            if (data.budgets !== undefined && data.transactions !== undefined) {
-              state = data;
-              if (!state.categories) state.categories = [];
-              renderAll();
-              showToast('Dados importados com sucesso!');
-            } else showToast('JSON inválido: faltam campos obrigatórios');
+            applyImportedState(data);
           } catch (err) { showToast('Erro ao ler JSON: ' + err.message); }
         };
         reader.readAsText(file);
@@ -2087,12 +2530,7 @@
       document.getElementById('applyJsonBtn').addEventListener('click', () => {
         try {
           const data = JSON.parse(document.getElementById('jsonTextarea').value);
-          if (data.budgets !== undefined && data.transactions !== undefined) {
-            state = data;
-            if (!state.categories) state.categories = [];
-            renderAll();
-            showToast('Dados aplicados com sucesso!');
-          } else showToast('JSON inválido: faltam campos obrigatórios');
+          applyImportedState(data);
         } catch (err) { showToast('Erro no JSON: ' + err.message); }
       });
 
@@ -2108,10 +2546,9 @@
           btn.classList.add('active');
           if (tabId === 'tabHistory') renderHistory();
           if (tabId === 'tabReserve') { renderReserve(); }
-          if (tabId === 'tabEntry') { renderEntryPool(); populateAllocSelects(); renderCategorySelects(); }
+          if (tabId === 'tabEntry') { updateHomeIndicators(); populateAllocSelects(); renderCategorySelects(); }
           if (tabId === 'tabReports') {
             renderMonthFilter();
-            // [CORREÇÃO] setTimeout para garantir que o container já tenha dimensão
             setTimeout(() => {
               renderSelectedMonthReport();
               renderAllCharts();
@@ -2119,7 +2556,6 @@
           }
           if (tabId === 'tabSettings') renderSettings();
           if (tabId === 'tabHome') {
-            // [CORREÇÃO] Re-renderiza o gráfico da home já que agora está visível
             setTimeout(() => {
               renderAllCharts();
               requestAnimationFrame(() => {
@@ -2132,7 +2568,7 @@
       });
 
       document.querySelectorAll('.modal-mask').forEach(m => {
-        m.addEventListener('click', (e) => { if (e.target === m) m.classList.remove('open'); });
+        m.addEventListener('click', (e) => { if (e.target === m) m.classList.remove('open', 'top-modal'); });
       });
 
       function addExpense(budgetId, amount, description, categoryId) {
@@ -2187,16 +2623,30 @@
         renderAll();
       }
 
+      function updateJsonTextarea() {
+        const ta = document.getElementById('jsonTextarea');
+        if (ta && document.activeElement !== ta) {
+          ta.value = JSON.stringify(state, null, 2);
+        }
+      }
+
       function init() {
         if (!loadState()) {
           state = {
+            schemaVersion: SCHEMA_VERSION,
             entryPool: 0,
             transactions: [],
             budgets: [
-              { id: "budget-fixed", name: "Contas Fixas", type: "FIXED", targetAmount: 0, currentBalance: 0, color: "#16a34a" },
-              { id: "budget-monthly", name: "Gastos Mensais", type: "MONTHLY", targetAmount: 0, currentBalance: 0, color: "#0d9488" }
+              { id: "budget-fixed", name: "Contas Fixas", type: "FIXED", targetAmount: 0, currentBalance: 0, color: "#16a34a",
+                goal: { enabled: false, targetAmount: 0, startCycle: '', endCycle: '' } },
+              { id: "budget-monthly", name: "Gastos Mensais", type: "MONTHLY", targetAmount: 0, currentBalance: 0, color: "#0d9488",
+                goal: { enabled: false, targetAmount: 0, startCycle: '', endCycle: '' } }
             ],
-            reserves: [{ id: "reserve-emergency", name: "Reserva", currentBalance: 0 }],
+            reserves: [{
+              id: "reserve-emergency", name: "Reserva de Emergência", currentBalance: 0,
+              color: "#7c3aed",
+              goal: { enabled: false, targetAmount: 0, startCycle: '', endCycle: '' }
+            }],
             categories: [
               { id: "cat-salario", name: "Salário", type: "ENTRY", color: "#15803d" },
               { id: "cat-extra", name: "Renda Extra", type: "ENTRY", color: "#16a34a" },
@@ -2216,6 +2666,7 @@
           renderCategorySelects();
           renderMonthFilter();
           renderSelectedMonthReport();
+          renderAllCharts();
         }, 100);
       }
 
