@@ -1,3 +1,5 @@
+import { api } from './api.js';
+
 export const SCHEMA_VERSION = 3;
 export const IS_DEMO = new URLSearchParams(location.search).has('demo');
 
@@ -111,27 +113,93 @@ export function isValidState(data) {
     && (data.categories === undefined || Array.isArray(data.categories));
 }
 
+/* ---------------- persistência ---------------- */
+
 // Ligado quando havia dados salvos que não puderam ser lidos. Enquanto estiver
 // ligado nada é gravado, para não substituir os dados do usuário por um estado vazio.
 let readOnly = false;
+let versaoServidor = 0;
+let timer = null;
+let gravando = false;
+let mudouEnquantoGravava = false;
+let aoMudarSync = null;
 
 export function isReadOnly() {
   return readOnly;
 }
 
-export function saveState() {
-  if (readOnly) return;
+export function onSync(callback) {
+  aoMudarSync = callback;
+}
+
+function avisar(situacao, detalhe) {
+  aoMudarSync?.(situacao, detalhe);
+}
+
+function lerLocalCru() {
+  const salvo = localStorage.getItem(STORAGE_KEY);
+  if (!salvo) return null;
+  try { return JSON.parse(salvo); }
+  catch (e) { return null; }
+}
+
+function gravarLocal() {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
   catch (e) { console.warn('Erro ao salvar', e); }
 }
 
-export function loadState() {
-  const saved = localStorage.getItem(STORAGE_KEY);
-  if (!saved) return false;
+export function saveState() {
+  if (readOnly) return;
+  if (IS_DEMO) { gravarLocal(); return; }
+  clearTimeout(timer);
+  timer = setTimeout(gravarNoServidor, 700);
+}
 
+export async function gravarNoServidor() {
+  if (IS_DEMO || readOnly) return;
+  if (gravando) { mudouEnquantoGravava = true; return; }
+
+  gravando = true;
+  avisar('salvando');
   try {
-    const parsed = JSON.parse(saved);
-    keepPreMigrationBackup(saved, parsed.schemaVersion || 1);
+    const resposta = await api.gravarState(state, versaoServidor);
+    versaoServidor = resposta.version;
+    avisar('ok');
+  } catch (e) {
+    if (e.status === 409) {
+      avisar('conflito');
+    } else if (e.status === 401) {
+      avisar('deslogado');
+    } else {
+      avisar('erro', e.message);
+      clearTimeout(timer);
+      timer = setTimeout(gravarNoServidor, 5000);
+    }
+  } finally {
+    gravando = false;
+    if (mudouEnquantoGravava) {
+      mudouEnquantoGravava = false;
+      saveState();
+    }
+  }
+}
+
+// A migração sobrescreve o localStorage, então guarda o JSON original uma vez
+// por versão de origem: é a única forma de voltar atrás no aparelho do usuário.
+function guardarBackupDaMigracao(bruto, versaoOrigem) {
+  if (versaoOrigem >= SCHEMA_VERSION) return;
+  const chave = `${STORAGE_KEY}_backup_v${versaoOrigem}`;
+  try {
+    if (!localStorage.getItem(chave)) localStorage.setItem(chave, bruto);
+  } catch (e) { console.warn('Não foi possível guardar o backup da migração', e); }
+}
+
+function carregarLocal() {
+  const salvo = localStorage.getItem(STORAGE_KEY);
+  if (!salvo) return false;
+  try {
+    const parsed = JSON.parse(salvo);
+    guardarBackupDaMigracao(salvo, parsed.schemaVersion || 1);
     state = migrateState(parsed);
     return true;
   } catch (e) {
@@ -141,12 +209,31 @@ export function loadState() {
   }
 }
 
-// A migração sobrescreve o localStorage, então guarda o JSON original uma vez
-// por versão de origem: é a única forma de voltar atrás no aparelho do usuário.
-function keepPreMigrationBackup(raw, fromVersion) {
-  if (fromVersion >= SCHEMA_VERSION) return;
-  const key = `${STORAGE_KEY}_backup_v${fromVersion}`;
-  try {
-    if (!localStorage.getItem(key)) localStorage.setItem(key, raw);
-  } catch (e) { console.warn('Não foi possível guardar o backup da migração', e); }
+export async function loadState() {
+  if (IS_DEMO) return carregarLocal();
+
+  const resposta = await api.lerState();
+  versaoServidor = resposta.version || 0;
+
+  if (resposta.data) {
+    state = migrateState(resposta.data);
+    return true;
+  }
+
+  // Primeira carga com o servidor vazio: sobe o que já existia neste aparelho.
+  // A cópia local continua intacta, como rede de segurança.
+  const local = lerLocalCru();
+  if (local && isValidState(local)) {
+    state = migrateState(local);
+    await gravarNoServidor();
+    return true;
+  }
+  return false;
+}
+
+export async function recarregarDoServidor() {
+  const resposta = await api.lerState();
+  versaoServidor = resposta.version || 0;
+  if (resposta.data) state = migrateState(resposta.data);
+  return !!resposta.data;
 }

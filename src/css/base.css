@@ -38,7 +38,7 @@ a{color:var(--accent)}
   outline:2px solid var(--accent);outline-offset:2px;border-radius:4px;
 }
 
-input[type="text"],input[type="number"],input[type="date"],input[type="month"],textarea{
+input[type="text"],input[type="number"],input[type="date"],input[type="month"],input[type="password"],textarea{
   width:100%;padding:12px 14px;border:0;border-radius:var(--radius-sm);
   font-size:15px;background:var(--sunk);color:var(--ink);min-height:var(--touch);
 }

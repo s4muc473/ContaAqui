@@ -13,31 +13,64 @@ salvo no seu próprio navegador.
 ### 📱 Estrutura
 - `index.html` com o markup das telas
 - `src/css/` com os estilos e `src/js/` com os módulos JavaScript
-- Usa o **localStorage do navegador** para salvar seus dados
-- Sem build, sem instalação de pacotes
+- `app.js` e `server/` com a API em Express
+- Seus dados ficam no **MongoDB**, protegidos por usuário e senha
 
 ```
+app.js     servidor (API + entrega do front)
+server/    db, autenticação e rotas
 index.html
 src/css/   base, layout, components, screens, goals
-src/js/    state, actions, render, charts, modals, dropdown, nav, events, main…
+src/js/    state, actions, render, charts, modals, dropdown, nav, events, api, main…
 ```
 
 ---
 
 ## Como rodar
 
-O JavaScript usa módulos ES, então o app precisa ser aberto por um servidor (abrir o
-arquivo direto pelo `file://` não funciona):
-
 ```bash
-python3 -m http.server 8777
+npm install
+cp .env.example .env    # preencha MONGODB_URI e JWT_SECRET
+npm run dev
 ```
 
-Depois acesse `http://localhost:8777`.
+Depois acesse `http://localhost:3000`. No primeiro acesso o app pede para **criar o
+usuário e a senha**; nos seguintes, mostra a tela de login.
 
-Para dar uma olhada com **dados de exemplo**, acesse `http://localhost:8777/?demo=1`.
-O modo de exemplo usa um armazenamento separado e não mexe nos seus dados reais — um selo
-no topo mostra quando ele está ativo.
+Precisa de um banco local em vez do Atlas?
+
+```bash
+docker run -d --name mycoin-mongo -p 27018:27017 mongo:7
+# no .env: MONGODB_URI=mongodb://127.0.0.1:27018
+```
+
+Para dar uma olhada com **dados de exemplo**, acesse `http://localhost:3000/?demo=1`.
+Esse modo não pede login nem usa o banco: roda só no navegador, num armazenamento
+separado, e um selo no topo mostra quando está ativo.
+
+---
+
+## Publicar na Vercel
+
+O projeto já vem com `vercel.json` pronto. Na Vercel, configure em
+**Settings → Environment Variables**:
+
+| Variável | Valor |
+|---|---|
+| `MONGODB_URI` | string completa do Atlas (`mongodb+srv://usuario:senha@cluster.../`) |
+| `JWT_SECRET` | segredo longo e aleatório, 16+ caracteres |
+| `MONGODB_DB` | opcional, padrão `mycoin` |
+
+Gere o segredo com:
+
+```bash
+node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"
+```
+
+No Atlas, libere o acesso de rede para a Vercel em **Network Access** (as funções não têm
+IP fixo, então o normal é liberar `0.0.0.0/0` e proteger pela senha do banco).
+
+Nenhuma credencial fica no repositório: o `.env` está no `.gitignore`.
 
 ---
 
@@ -77,6 +110,7 @@ categoria.
 ### 6. ⚙️ Configurações
 - **Perfil**: seu nome e a **cor principal** do app (qualquer cor). O avatar mostra a
   inicial do seu nome
+- **Conta**: trocar a senha e sair do aparelho
 - **Ciclo financeiro**: o dia do mês em que seu ciclo começa (padrão: dia 6)
 - **Categorias**: para classificar entradas e saídas
 
@@ -94,8 +128,9 @@ categoria.
 
 ## Dicas importantes
 
-- **Tudo fica salvo no navegador**: se limpar os dados do navegador, perde tudo
-- **Baixe o backup** de vez em quando
+- **Seus dados ficam no servidor**, ligados ao seu usuário — dá para abrir de outro
+  aparelho fazendo login
+- **Baixe o backup** de vez em quando, em **Dados**
 - **O ciclo financeiro** define como os meses são contados (seu mês pode não começar no dia 1)
 
 ---
@@ -106,7 +141,8 @@ categoria.
 - **JavaScript (módulos ES)** - lógica e interatividade
 - **Chart.js** - gráficos
 - **Font Awesome** - ícones
-- **localStorage** - salvamento de dados
+- **Express + MongoDB** - API e armazenamento
+- **Vercel** - hospedagem
 
 ---
 

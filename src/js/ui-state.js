@@ -8,4 +8,5 @@ export const ui = {
   currentReserveId: null,
   editingReserveId: null,
   editingTxId: null,
+  usuario: null,
 };

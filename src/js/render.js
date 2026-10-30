@@ -209,6 +209,10 @@ export function renderSettings() {
   const cycleInput = $('settingsCycleDay');
   if (cycleInput && document.activeElement !== cycleInput) cycleInput.value = state.cycleStartDay || 6;
 
+  const contaBlock = $('contaBlock');
+  contaBlock.hidden = !ui.usuario;
+  if (ui.usuario) $('contaUsuario').textContent = ui.usuario.username;
+
   renderSettingsCategories();
 }
 

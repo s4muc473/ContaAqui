@@ -1,4 +1,5 @@
-import { state } from './state.js';
+import { state, gravarNoServidor } from './state.js';
+import { api } from './api.js';
 import { $, showToast } from './utils.js';
 import { ui } from './ui-state.js';
 import { showTab, setTabHooks } from './nav.js';
@@ -174,6 +175,28 @@ function wireSettings() {
     const name = $('settingsCatName').value.trim();
     const type = getDropdownValue('ddCatType') || 'EXPENSE';
     if (createCategory(name, type)) $('settingsCatName').value = '';
+  });
+
+  on('trocarSenhaBtn', 'click', async () => {
+    const atual = $('senhaAtual').value;
+    const nova = $('senhaNova').value;
+    if (nova.length < 8) { showToast('A nova senha precisa de pelo menos 8 caracteres'); return; }
+    try {
+      await api.trocarSenha(atual, nova);
+      $('senhaAtual').value = '';
+      $('senhaNova').value = '';
+      showToast('Senha alterada!');
+    } catch (e) {
+      showToast(e.message);
+    }
+  });
+
+  on('sairBtn', 'click', async () => {
+    if (!confirm('Sair da conta neste aparelho?')) return;
+    await gravarNoServidor();
+    try { await api.logout(); } catch (e) { /* segue para a tela de login mesmo assim */ }
+    ui.usuario = null;
+    location.reload();
   });
 }
 

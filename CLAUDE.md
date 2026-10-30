@@ -12,15 +12,28 @@ Dependências vêm de CDN no `<head>`: Chart.js 4.4.0, Font Awesome 6.4.0, Googl
 
 ## Executar
 
-O JS usa ES modules, então **precisa ser servido por HTTP** — abrir o arquivo via
-`file://` não funciona.
+O app é servido pelo próprio Express (`app.js`), que entrega o front e a API na mesma
+origem — é isso que faz o cookie de sessão funcionar sem CORS.
 
 ```bash
-python3 -m http.server 8777
+npm install
+cp .env.example .env    # preencha MONGODB_URI e JWT_SECRET
+npm run dev             # http://localhost:3000
 ```
 
-Há um `.claude/launch.json` com essa configuração (nome `mycoin`). Em GitHub Pages
-funciona direto.
+Para um banco local em vez do Atlas:
+
+```bash
+docker run -d --name mycoin-mongo -p 27018:27017 mongo:7
+# no .env: MONGODB_URI=mongodb://127.0.0.1:27018
+```
+
+Variáveis (as mesmas no `.env` local e no painel da Vercel): `MONGODB_URI`,
+`JWT_SECRET` (≥16 caracteres) e `MONGODB_DB` (opcional, padrão `mycoin`).
+**Nenhuma credencial entra no repositório** — o `.env` está no `.gitignore`.
+
+`?demo=1` não passa pelo servidor: carrega dados de exemplo e grava só no localStorage,
+numa chave separada. Serve para ver o app sem banco e sem login.
 
 `?demo=1` carrega dados de exemplo numa chave de localStorage separada
 (`financeiro_data_demo`), sem tocar nos dados reais (`financeiro_data`). Um selo no
@@ -81,6 +94,8 @@ vivo (`import { state }`) e só `state.js` troca o valor, via `setState()`.
 ## Estrutura
 
 ```
+app.js            servidor Express (é o handler da Vercel: module.exports = app)
+server/           backend — db, auth e rotas
 index.html        markup de todas as telas e modais (nada é criado do zero em runtime)
 src/css/          base → layout → components → screens → goals (a ordem importa: cascata)
 src/js/           módulos ES, carregados por src/js/main.js
@@ -101,7 +116,58 @@ src/js/           módulos ES, carregados por src/js/main.js
 | `modals.js` | ler/preencher campos de modal e chamar actions |
 | `events.js` | wiring de listeners (`wireEvents()`) |
 | `demo-data.js` | dados de exemplo do `?demo=1` |
+| `api.js` | cliente HTTP da API |
+| `auth-ui.js` | tela de login / criação de acesso |
 | `main.js` | `init()` |
+
+## Backend
+
+| Arquivo | Papel |
+|---|---|
+| `app.js` | Express: monta a API, serve o front e exporta o handler da Vercel |
+| `server/env.js` | lê o `.env` local sem depender de pacote (na Vercel as vars já vêm do ambiente) |
+| `server/db.js` | conexão Mongo com cache no `global` e criação dos índices |
+| `server/auth.js` | bcrypt, JWT em cookie httpOnly e o middleware `exigirLogin` |
+| `server/routes/auth.js` | `/api/auth` — status, setup, login, logout, troca de senha |
+| `server/routes/state.js` | `/api/state` — lê e grava o state do usuário |
+
+Duas coleções, preparadas para vários usuários desde já:
+
+```
+users   { _id, username (único), passwordHash, createdAt, updatedAt }
+states  { _id, userId (único), data, version, updatedAt }
+```
+
+`states.data` é **o mesmo JSON que o app usa em memória**, gravado sem transformação —
+é isso que mantém a fidelidade e deixa o documento pequeno (o histórico real dá ~25 KB,
+contra 16 MB por documento e 512 MB do plano gratuito). O servidor valida só a forma
+mínima (`transactions` e `reserves` como listas) e o tamanho; ele não conhece as regras
+de negócio, que continuam no front.
+
+Hoje só existe um usuário: `/api/auth/setup` funciona apenas enquanto a coleção `users`
+estiver vazia. Para abrir para mais usuários, basta liberar essa rota — o resto já é por
+`userId`.
+
+### Gravação e concorrência
+
+O front não faz uma chamada por operação: `saveState()` agenda um PUT do state inteiro
+(700 ms de debounce, mais um flush quando a aba é escondida). Cada gravação incrementa
+`version`; se outro aparelho gravou no meio, o PUT volta 409 e o cliente recarrega do
+servidor em vez de sobrescrever.
+
+Na primeira carga, se o servidor ainda não tem nada e existe state no localStorage
+daquele aparelho, ele é enviado para o servidor — é a migração de quem já usava o app
+offline. A cópia local **não** é apagada, serve de rede de segurança.
+
+### Cuidados na Vercel
+
+- O handler é `module.exports = app` em `app.js`, com `builds`/`routes` no `vercel.json`.
+- `includeFiles` precisa listar `index.html`, `src/**` e os ícones, senão eles não entram
+  no bundle da função e o app não carrega.
+- A conexão do Mongo fica em cache no `global` porque a mesma instância atende várias
+  requisições; abrir um pool por invocação estoura o limite de conexões do Atlas.
+- O Express **não** serve o diretório inteiro: só `/src` e uma lista fixa de ícones; todo
+  o resto cai no `index.html`. É o que impede `.env`, `server/` e `.git/` de vazarem.
 
 Regra que mantém isso navegável: **só `actions.js` muda dinheiro**. `modals.js` lê o DOM e
 delega; `render.js` só desenha. Actions validam, mostram toast em erro e retornam

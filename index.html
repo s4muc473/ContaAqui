@@ -23,13 +23,36 @@
 </head>
 
 <body>
-  <div id="app">
+  <div class="auth-screen" id="authScreen" hidden>
+    <form class="auth-box" id="authForm">
+      <div class="auth-brand"><i class="fas fa-coins"></i> MyCoin</div>
+      <h1 id="authTitle">Entrar</h1>
+      <p class="auth-sub" id="authSub">Acesse com seu usuário e senha.</p>
+
+      <label class="field-label" for="authUser">Usuário</label>
+      <input type="text" id="authUser" autocomplete="username" autocapitalize="none" spellcheck="false" required>
+
+      <label class="field-label" for="authPass">Senha</label>
+      <input type="password" id="authPass" autocomplete="current-password" required>
+
+      <div id="authConfirmWrap" hidden>
+        <label class="field-label" for="authPass2">Confirmar senha</label>
+        <input type="password" id="authPass2" autocomplete="new-password">
+      </div>
+
+      <p class="auth-erro" id="authErro" hidden></p>
+      <button class="mk-btn pri block" id="authSubmit" type="submit">Entrar</button>
+    </form>
+  </div>
+
+  <div id="app" hidden>
     <header class="app-header">
       <button class="avatar" id="avatarBtn" aria-label="Editar perfil"></button>
       <div class="greeting">
         <span class="hi">Olá</span>
         <strong id="profileName">Olá!</strong>
       </div>
+      <span class="sync" id="syncStatus" hidden></span>
       <button class="icon-btn" id="settingsBtn" aria-label="Configurações"><i class="fas fa-gear"></i></button>
       <button class="icon-btn" id="menuToggle" aria-label="Abrir menu"><i class="fas fa-bars"></i></button>
     </header>
@@ -185,6 +208,17 @@
           <span class="color-hex" id="settingsColorHex">#16a34a</span>
         </div>
         <button class="mk-btn pri block" id="settingsProfileSave"><i class="fas fa-check"></i> Salvar perfil</button>
+      </div>
+
+      <div class="config-block" id="contaBlock" hidden>
+        <h4><i class="fas fa-lock"></i> Conta</h4>
+        <div class="desc">Conectado como <strong id="contaUsuario">—</strong>.</div>
+        <label class="field-label" for="senhaAtual">Senha atual</label>
+        <input type="password" id="senhaAtual" autocomplete="current-password">
+        <label class="field-label" for="senhaNova">Nova senha</label>
+        <input type="password" id="senhaNova" autocomplete="new-password">
+        <button class="mk-btn block" id="trocarSenhaBtn"><i class="fas fa-key"></i> Alterar senha</button>
+        <button class="mk-btn block" id="sairBtn" style="margin-top:8px"><i class="fas fa-right-from-bracket"></i> Sair</button>
       </div>
 
       <div class="config-block">
