@@ -14,671 +14,178 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="src/css/base.css">
+  <link rel="stylesheet" href="src/css/layout.css">
+  <link rel="stylesheet" href="src/css/components.css">
+  <link rel="stylesheet" href="src/css/screens.css">
+  <link rel="stylesheet" href="src/css/goals.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-  <style>
-    :root{
-      --bg:#f4f7f3; --surface:#ffffff; --sunk:#eaf0e7;
-      --ink:#1a1f1a; --muted:#5e6b5c; --line:#dbe5d8;
-      --accent:#16a34a; --accent-ink:#ffffff; --accent-soft:#e3f6ea;
-      --ok:#15803d;    --ok-soft:#dcfce7;
-      --warn:#b45309;  --warn-soft:#fef3c7;
-      --info:#0369a1;  --info-soft:#e0f2fe;
-      --violet:#7c3aed;--violet-soft:#f3e8ff;
-      --teal:#0d9488;  --teal-soft:#ccfbf1;
-      --pink:#db2777;  --pink-soft:#fce7f3;
-      --coral:#ea580c; --coral-soft:#ffedd5;
-      --shadow:0 1px 2px rgba(20,60,30,.06),0 8px 24px rgba(20,60,30,.06);
-      --display:'Bricolage Grotesque',system-ui,sans-serif;
-      --body:'IBM Plex Sans',system-ui,sans-serif;
-      --mono:'IBM Plex Mono',ui-monospace,monospace;
-      --radius:14px; --radius-sm:9px;
-      --touch:44px;
-      color-scheme:light;
-    }
-    *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-    html,body{height:100%}
-    body{background:var(--bg);color:var(--ink);font:14.5px/1.55 var(--body);display:flex;justify-content:center;min-height:100vh;font-family:var(--body)}
-    h1,h2,h3,h4{font-family:var(--display);letter-spacing:-.01em;text-wrap:balance}
-    button{font-family:inherit;cursor:pointer}
-    .mono{font-family:var(--mono)}
-
-    #app{
-      max-width:600px;width:100%;background:var(--surface);min-height:100vh;
-      padding:16px 18px 90px 18px;position:relative;
-      box-shadow:0 0 40px rgba(20,60,30,.04);
-    }
-
-    .header{
-      display:flex;justify-content:space-between;align-items:center;
-      padding:8px 0 14px 0;border-bottom:1px solid var(--line);
-    }
-    .header h1{
-      font-size:20px;font-weight:700;letter-spacing:-.3px;color:var(--ink);
-      display:flex;align-items:center;gap:8px;
-    }
-    .header h1 i{color:var(--accent)}
-
-    .menu-btn{
-      background:none;border:1px solid var(--line);font-size:20px;padding:0;
-      cursor:pointer;color:var(--muted);border-radius:50%;
-      width:var(--touch);height:var(--touch);display:grid;place-items:center;
-      transition:.15s;
-    }
-    .menu-btn:hover{background:var(--sunk);color:var(--ink)}
-
-    .menu-overlay{
-      position:fixed;inset:0;background:color-mix(in srgb,var(--ink) 42%,transparent);
-      z-index:999;display:none;justify-content:flex-end;
-    }
-    .menu-overlay.open{display:flex}
-    .menu-panel{
-      background:var(--surface);width:280px;height:100%;padding:24px 20px;
-      box-shadow:-8px 0 30px rgba(20,60,30,.12);display:flex;flex-direction:column;gap:4px;
-      padding-top:calc(24px + env(safe-area-inset-top,0px));
-      padding-bottom:calc(24px + env(safe-area-inset-bottom,0px));
-      overflow-y:auto;
-    }
-    .menu-panel button{
-      background:none;border:0;font-size:15px;text-align:left;
-      padding:12px 14px;border-radius:var(--radius-sm);
-      font-weight:500;color:var(--ink);cursor:pointer;
-      display:flex;align-items:center;gap:12px;transition:.1s;
-    }
-    .menu-panel button:hover{background:var(--sunk)}
-    .menu-panel button i{width:22px;color:var(--muted);text-align:center;font-size:15px}
-    .menu-panel button.active{background:var(--accent-soft);color:var(--accent);font-weight:600}
-    .menu-panel button.active i{color:var(--accent)}
-    .menu-close{
-      align-self:flex-end;font-size:22px;background:var(--sunk);border:0;
-      width:38px;height:38px;border-radius:50%;cursor:pointer;color:var(--muted);
-      display:grid;place-items:center;margin-bottom:12px;
-    }
-    .menu-close:hover{background:var(--line);color:var(--ink)}
-
-    .tab-content{display:none;margin-top:18px}
-    .tab-content.active{display:block}
-
-    .mk-btn{
-      display:inline-flex;align-items:center;justify-content:center;gap:7px;
-      font:600 14px/1.2 var(--body);min-height:var(--touch);padding:11px 16px;
-      border-radius:var(--radius-sm);border:1px solid var(--line);
-      background:var(--surface);color:var(--ink);white-space:nowrap;
-      text-decoration:none;transition:.1s;
-    }
-    .mk-btn:hover{border-color:var(--muted)}
-    .mk-btn.pri{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
-    .mk-btn.pri:hover{filter:brightness(.94)}
-    .mk-btn.success{background:var(--ok);border-color:var(--ok);color:#fff}
-    .mk-btn.block{width:100%}
-    .mk-btn.sm{min-height:36px;padding:8px 12px;font-size:13px}
-
-    .budget-list{margin:16px 0 12px 0;display:flex;flex-direction:column;gap:8px}
-    .budget-item{
-      background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
-      padding:12px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px;
-      box-shadow:0 1px 2px rgba(20,60,30,.03);
-    }
-    .budget-left{display:flex;align-items:center;gap:10px;flex:1;min-width:0}
-    .budget-color{width:14px;height:14px;border-radius:50%;border:1px solid rgba(0,0,0,.06);flex-shrink:0}
-    .budget-name{
-      font-weight:600;color:var(--ink);font-size:14.5px;
-      white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-    }
-    .budget-balance{
-      font:700 14px/1 var(--mono);color:var(--ink);
-      background:var(--sunk);padding:6px 12px;border-radius:999px;flex-shrink:0;
-    }
-    .budget-actions{display:flex;gap:2px;align-items:center;flex-shrink:0}
-    .budget-actions button{
-      background:none;border:0;font-size:15px;cursor:pointer;padding:0;
-      width:36px;height:36px;border-radius:var(--radius-sm);transition:.1s;color:var(--muted);
-      display:grid;place-items:center;
-    }
-    .budget-actions button:hover{background:var(--sunk);color:var(--ink)}
-
-    .report-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0 8px 0}
-    .report-card{
-      background:var(--surface);border-radius:var(--radius);padding:16px 14px;
-      text-align:left;border:1px solid var(--line);display:grid;gap:4px;
-    }
-    .report-card .label{
-      font:500 11px/1.2 var(--mono);letter-spacing:.05em;text-transform:uppercase;
-      color:var(--muted);display:flex;align-items:center;gap:6px;
-    }
-    .report-card .value{
-      font:700 20px/1.1 var(--display);letter-spacing:-.01em;color:var(--ink);
-    }
-
-    .chart-container{
-      background:var(--surface);border-radius:var(--radius);padding:16px 12px;
-      margin:14px 0;border:1px solid var(--line);min-height:240px;
-    }
-    .chart-container .chart-title{
-      font-weight:600;font-size:14px;margin-bottom:12px;
-      display:flex;align-items:center;gap:8px;color:var(--ink);
-    }
-    .chart-container .chart-title i{color:var(--accent)}
-    .chart-container canvas{width:100% !important;height:200px !important;max-height:200px}
-
-    .scrollable-chart{
-      position:relative;width:100%;overflow-x:auto;overflow-y:hidden;
-      -webkit-overflow-scrolling:touch;border-radius:var(--radius-sm);
-      background:var(--surface);padding:6px 0;
-      scrollbar-width:thin;
-    }
-    .scrollable-chart::-webkit-scrollbar{height:8px}
-    .scrollable-chart::-webkit-scrollbar-track{background:var(--sunk);border-radius:10px}
-    .scrollable-chart::-webkit-scrollbar-thumb{background:var(--line);border-radius:10px}
-    .scrollable-chart .scrollable-inner{position:relative;height:220px;min-height:220px}
-    .scrollable-chart canvas{height:220px !important;max-height:220px}
-
-    .reserve-chart-container{
-      background:var(--surface);border-radius:var(--radius);padding:16px 12px;
-      margin:14px 0;border:1px solid var(--line);min-height:280px;
-    }
-    .reserve-chart-container .chart-title{
-      font-weight:600;font-size:14px;margin-bottom:12px;
-      display:flex;align-items:center;gap:8px;color:var(--ink);
-    }
-    .reserve-chart-container .chart-title i{color:var(--accent)}
-    .reserve-chart-container canvas{width:100% !important;height:240px !important;max-height:240px}
-
-    .modal-mask{
-      position:fixed;inset:0;background:color-mix(in srgb,var(--ink) 42%,transparent);
-      backdrop-filter:blur(2px);display:none;align-items:center;justify-content:center;
-      z-index:1000;padding:20px;
-    }
-    .modal-mask.open{display:flex}
-    .modal-mask.top-modal{z-index:1200}
-    .modal-box{
-      background:var(--surface);width:100%;max-width:400px;border-radius:var(--radius);
-      padding:24px 22px;box-shadow:var(--shadow);max-height:90vh;overflow-y:auto;
-    }
-    .modal-box h3{font-size:18px;margin-bottom:16px;font-weight:700;color:var(--ink)}
-    .modal-box input,.modal-box select{
-      width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:var(--radius-sm);
-      font-size:15px;margin-bottom:12px;background:var(--surface);color:var(--ink);
-      font-family:inherit;min-height:var(--touch);
-    }
-    .modal-box input:focus,.modal-box select:focus{outline:2px solid var(--accent);outline-offset:2px;border-color:transparent}
-    .modal-box label{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:4px}
-    .modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:8px;flex-wrap:wrap}
-    .modal-actions button{
-      padding:11px 18px;border-radius:var(--radius-sm);border:1px solid var(--line);
-      font-weight:600;background:var(--surface);cursor:pointer;font-size:14px;
-      min-height:var(--touch);font-family:inherit;color:var(--ink);
-    }
-    .modal-actions button:hover{border-color:var(--muted)}
-    .modal-actions .primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
-    .modal-actions .primary:hover{filter:brightness(.94)}
-    .modal-actions .danger{background:var(--surface);color:var(--accent);border-color:color-mix(in srgb,var(--accent) 40%,var(--line))}
-    .modal-actions .danger:hover{background:var(--accent-soft)}
-
-    .history-item{
-      display:flex;justify-content:space-between;align-items:center;gap:10px;
-      padding:12px 0;border-bottom:1px solid var(--line);font-size:14px;
-    }
-    .history-item .desc{font-weight:500;color:var(--ink)}
-    .history-item .val{font-weight:600;font-family:var(--mono);font-size:13.5px}
-    .history-item .val.positive{color:var(--ok)}
-    .history-item .val.negative{color:var(--accent)}
-    .history-item .history-delete-btn,
-    .history-item .history-edit-btn{
-      background:none;border:0;color:var(--muted);cursor:pointer;padding:0;
-      width:36px;height:36px;border-radius:var(--radius-sm);transition:.15s;
-      font-size:14px;flex-shrink:0;display:grid;place-items:center;
-    }
-    .history-item .history-delete-btn:hover,
-    .history-item .history-edit-btn:hover{background:var(--accent-soft);color:var(--accent)}
-    .history-category-tag{
-      display:inline-block;font:600 10.5px/1 var(--mono);
-      padding:3px 10px;border-radius:999px;background:var(--sunk);color:var(--muted);
-      margin-left:6px;vertical-align:middle;
-    }
-    .filter-group{display:flex;gap:6px;margin:12px 0 16px 0;flex-wrap:wrap}
-    .filter-group button{
-      background:var(--surface);border:1px solid var(--line);padding:8px 16px;
-      border-radius:999px;font-weight:600;font-size:13px;cursor:pointer;
-      transition:.1s;color:var(--muted);font-family:inherit;
-    }
-    .filter-group button:hover{border-color:var(--muted);color:var(--ink)}
-    .filter-group .active-filter{background:var(--ink);color:var(--bg);border-color:var(--ink)}
-
-    .reserve-card{
-      background:var(--surface);border:1px solid var(--line);
-      border-radius:var(--radius);padding:14px 16px;margin:8px 0;
-      display:flex;justify-content:space-between;align-items:center;gap:10px;
-    }
-    .reserve-card .balance{font:700 18px/1 var(--display)}
-    .reserve-card .info{display:flex;flex-direction:column;gap:2px;flex:1;min-width:0}
-    .reserve-card .name{font-weight:600;font-size:14.5px;display:flex;align-items:center;gap:8px}
-    .reserve-card .actions{display:flex;gap:2px}
-    .reserve-card .actions button{
-      background:none;border:0;font-size:14px;cursor:pointer;padding:0;
-      width:36px;height:36px;border-radius:var(--radius-sm);color:var(--muted);
-      display:grid;place-items:center;
-    }
-    .reserve-card .actions button:hover{background:var(--sunk);color:var(--ink)}
-
-    .json-actions{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px}
-    .json-actions button{
-      background:var(--surface);border:1px solid var(--line);
-      padding:11px 18px;border-radius:var(--radius-sm);font-weight:600;
-      cursor:pointer;display:flex;align-items:center;gap:8px;
-      font-family:inherit;color:var(--ink);min-height:var(--touch);
-    }
-    .json-actions button:hover{border-color:var(--muted)}
-    .json-actions .primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
-
-    .entry-tab-inputs{display:flex;flex-direction:column;gap:10px}
-    .entry-tab-inputs input,.entry-tab-inputs select{
-      padding:12px 14px;border:1px solid var(--line);border-radius:var(--radius-sm);
-      font-size:15px;background:var(--surface);color:var(--ink);
-      font-family:inherit;min-height:var(--touch);
-    }
-
-    .toast{
-      position:fixed;left:20px;right:20px;bottom:20px;
-      background:var(--ink);color:var(--bg);padding:12px 18px;
-      border-radius:var(--radius-sm);font-weight:500;font-size:13.5px;
-      z-index:2000;opacity:0;transition:opacity .3s;pointer-events:none;
-      text-align:center;max-width:560px;margin:0 auto;box-shadow:var(--shadow);
-    }
-    .toast.show{opacity:1}
-
-    .category-list{display:flex;flex-direction:column;gap:8px;margin-bottom:16px}
-    .category-item{
-      display:flex;align-items:center;justify-content:space-between;gap:10px;
-      background:var(--surface);border:1px solid var(--line);
-      border-radius:var(--radius);padding:12px 14px;
-    }
-    .category-item .cat-left{display:flex;align-items:center;gap:10px;flex:1;min-width:0}
-    .category-item .cat-dot{width:14px;height:14px;border-radius:50%;flex-shrink:0}
-    .category-item .cat-name{font-weight:600;font-size:14px}
-    .category-item .cat-type{
-      font:600 10.5px/1 var(--mono);padding:4px 10px;border-radius:999px;
-      background:var(--sunk);color:var(--muted);
-    }
-    .category-item .cat-delete,
-    .category-item .cat-edit{
-      background:none;border:0;color:var(--muted);cursor:pointer;padding:0;
-      width:36px;height:36px;border-radius:var(--radius-sm);transition:.1s;
-      display:grid;place-items:center;
-    }
-    .category-item .cat-delete:hover{background:var(--accent-soft);color:var(--accent)}
-    .category-item .cat-edit:hover{background:var(--sunk);color:var(--ink)}
-
-    .section-title{
-      font-size:16px;font-weight:700;margin-bottom:14px;
-      display:flex;align-items:center;gap:10px;color:var(--ink);
-    }
-
-    .month-filter-row{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center}
-    .month-filter-row label{font-size:13px;font-weight:600;color:var(--muted);margin-right:4px;display:flex;align-items:center;gap:6px}
-    .month-filter-row select{
-      padding:11px 16px;border:1px solid var(--line);border-radius:var(--radius-sm);
-      font-size:14px;background:var(--surface);color:var(--ink);font-weight:500;
-      flex:1;min-width:150px;cursor:pointer;font-family:inherit;min-height:var(--touch);
-    }
-    .month-report-block{
-      background:var(--surface);border:1px solid var(--line);
-      border-radius:var(--radius);padding:16px 14px;margin-bottom:16px;
-    }
-    .month-report-header{
-      display:flex;justify-content:space-between;align-items:flex-start;gap:10px;
-      margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--line);
-      flex-wrap:wrap;
-    }
-    .month-report-header h4{font-size:15px;font-weight:700;color:var(--ink);text-transform:capitalize}
-    .month-report-header .month-totals{display:flex;gap:12px;font:600 12.5px var(--mono);flex-wrap:wrap}
-    .month-report-header .month-totals .in{color:var(--ok)}
-    .month-report-header .month-totals .out{color:var(--accent)}
-    .month-report-chart-wrap{position:relative;width:100%;height:260px;min-height:260px}
-    .month-report-chart-wrap canvas{width:100% !important;height:260px !important;max-height:260px}
-    .month-economy-badge{
-      display:inline-flex;align-items:center;gap:6px;margin-top:10px;
-      font:600 12px var(--mono);padding:5px 12px;border-radius:999px;
-      background:var(--warn-soft);color:var(--warn);
-    }
-    .balance-chart-scroll-wrap{
-      position:relative;width:100%;overflow-x:auto;overflow-y:hidden;
-      -webkit-overflow-scrolling:touch;border-radius:var(--radius-sm);
-      background:var(--sunk);border:1px solid var(--line);padding:10px 6px;
-      scrollbar-width:thin;
-    }
-    .balance-chart-scroll-wrap::-webkit-scrollbar{height:8px}
-    .balance-chart-scroll-wrap::-webkit-scrollbar-track{background:var(--sunk);border-radius:10px}
-    .balance-chart-scroll-wrap::-webkit-scrollbar-thumb{background:var(--line);border-radius:10px}
-    .balance-chart-inner{position:relative;height:260px;min-height:260px}
-    .balance-summary,.categories-summary{
-      display:flex;justify-content:space-between;align-items:center;gap:8px;
-      margin-top:12px;padding-top:12px;border-top:1px solid var(--line);
-      font-size:13px;flex-wrap:wrap;
-    }
-    .balance-summary .item,.categories-summary .item{display:flex;flex-direction:column;align-items:center;gap:2px;min-width:60px}
-    .balance-summary .item .lbl,.categories-summary .item .lbl{
-      color:var(--muted);font-size:11px;font-weight:500;font-family:var(--mono);
-      text-transform:uppercase;letter-spacing:.04em;
-    }
-    .balance-summary .item .vl,.categories-summary .item .vl{font-weight:700;font-size:14px}
-    .balance-summary .item .vl.pos,.categories-summary .item .vl.pos{color:var(--ok)}
-    .balance-summary .item .vl.neg,.categories-summary .item .vl.neg{color:var(--accent)}
-    .categories-chart-scroll-wrap{
-      position:relative;width:100%;overflow-x:auto;overflow-y:hidden;
-      -webkit-overflow-scrolling:touch;border-radius:var(--radius-sm);
-      background:var(--sunk);border:1px solid var(--line);padding:10px 6px;
-      scrollbar-width:thin;
-    }
-    .categories-chart-scroll-wrap::-webkit-scrollbar{height:8px}
-    .categories-chart-scroll-wrap::-webkit-scrollbar-track{background:var(--sunk);border-radius:10px}
-    .categories-chart-scroll-wrap::-webkit-scrollbar-thumb{background:var(--line);border-radius:10px}
-    .categories-chart-inner{position:relative;height:260px;min-height:260px}
-    .cat-type-toggle{display:flex;gap:6px;margin-bottom:12px}
-    .cat-type-toggle button{
-      flex:1;background:var(--sunk);border:1px solid transparent;padding:9px 12px;
-      border-radius:var(--radius-sm);font-weight:600;font-size:13px;cursor:pointer;
-      transition:.15s;color:var(--muted);display:flex;align-items:center;
-      justify-content:center;gap:6px;font-family:inherit;min-height:40px;
-    }
-    .cat-type-toggle button.active{background:var(--ink);color:var(--bg)}
-
-    .config-block{
-      border:1px solid var(--line);border-radius:var(--radius);
-      background:var(--surface);padding:16px;margin-bottom:14px;
-      display:grid;gap:12px;
-    }
-    .config-block h4{
-      font-size:15px;font-weight:700;color:var(--ink);
-      display:flex;align-items:center;gap:8px;
-    }
-    .config-block h4 i{color:var(--accent)}
-    .config-block .desc{font-size:12.5px;color:var(--muted);margin-top:-6px}
-    .config-row{display:flex;gap:8px;flex-wrap:wrap}
-    .config-row input{
-      flex:1;min-width:120px;padding:11px 14px;border:1px solid var(--line);
-      border-radius:var(--radius-sm);font-size:14px;background:var(--surface);
-      color:var(--ink);font-family:inherit;min-height:var(--touch);
-    }
-    .config-row select{
-      padding:11px 14px;border:1px solid var(--line);border-radius:var(--radius-sm);
-      font-size:14px;background:var(--surface);color:var(--ink);
-      min-width:110px;font-family:inherit;min-height:var(--touch);
-    }
-    .config-row input[type="color"]{
-      flex:0 0 60px;min-width:60px;padding:4px;height:var(--touch);cursor:pointer;
-    }
-    .config-row button{
-      background:var(--accent);color:var(--accent-ink);border:0;
-      padding:11px 18px;border-radius:var(--radius-sm);font-weight:600;
-      cursor:pointer;font-size:14px;display:flex;align-items:center;gap:6px;
-      font-family:inherit;min-height:var(--touch);
-    }
-    .config-row button:hover{filter:brightness(.94)}
-
-    .mes-edit-list{display:grid;gap:6px;max-height:60vh;overflow-y:auto;margin-top:8px}
-    .mes-edit-linha{
-      display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;
-      padding:10px 12px;border:1px solid var(--line);border-radius:var(--radius-sm);
-      background:var(--surface);
-    }
-    .mes-edit-info{min-width:0}
-    .mes-edit-desc{font-weight:600;font-size:13.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-    .mes-edit-meta{font-size:11.5px;color:var(--muted);display:flex;gap:8px;flex-wrap:wrap;margin-top:2px}
-    .mes-edit-tipo{
-      font:600 10.5px/1 var(--mono);padding:3px 8px;border-radius:999px;
-      background:var(--sunk);color:var(--muted);
-    }
-    .mes-edit-tipo.entry{background:var(--ok-soft);color:var(--ok)}
-    .mes-edit-tipo.expense{background:var(--accent-soft);color:var(--accent)}
-    .mes-edit-val{font:700 14px/1 var(--mono);text-align:right}
-    .mes-edit-val.pos{color:var(--ok)}
-    .mes-edit-val.neg{color:var(--accent)}
-    .mes-edit-acoes{display:flex;gap:4px;justify-content:flex-end;margin-top:6px}
-    .mes-edit-acoes button{
-      background:none;border:0;color:var(--muted);padding:6px;border-radius:var(--radius-sm);
-      min-width:32px;min-height:32px;display:grid;place-items:center;
-    }
-    .mes-edit-acoes button:hover{background:var(--accent-soft);color:var(--accent)}
-    .mes-edit-vazio{padding:20px;text-align:center;color:var(--muted);font-size:13px}
-
-    .mes-add-card{
-      border:1px dashed var(--line);border-radius:var(--radius-sm);
-      padding:12px;margin-bottom:10px;background:var(--sunk);
-      display:grid;gap:8px;
-    }
-    .mes-add-card .row-2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-    .mes-add-card input,.mes-add-card select{
-      width:100%;padding:10px 12px;border:1px solid var(--line);
-      border-radius:var(--radius-sm);font-size:14px;background:var(--surface);
-      color:var(--ink);font-family:inherit;min-height:40px;
-    }
-    .mes-add-card .aviso{
-      font-size:11.5px;color:var(--warn);display:flex;gap:6px;align-items:flex-start;
-    }
-    .mes-add-card .aviso i{margin-top:2px}
-    .mes-add-tipo-toggle{display:flex;gap:6px}
-    .mes-add-tipo-toggle button{
-      flex:1;background:var(--surface);border:1px solid var(--line);padding:8px 12px;
-      border-radius:var(--radius-sm);font-weight:600;font-size:13px;cursor:pointer;
-      color:var(--muted);display:flex;align-items:center;justify-content:center;gap:6px;
-      font-family:inherit;min-height:40px;
-    }
-    .mes-add-tipo-toggle button.active{background:var(--ink);color:var(--bg);border-color:var(--ink)}
-    .mes-add-botao{
-      background:var(--accent);color:var(--accent-ink);border:0;
-      padding:11px 16px;border-radius:var(--radius-sm);font-weight:600;
-      cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;gap:6px;
-      font-family:inherit;min-height:40px;
-    }
-
-    /* ============ NOVOS ESTILOS: METAS ============ */
-    .goal-progress{
-      margin-top:6px;
-      background:var(--sunk);
-      height:6px;
-      border-radius:999px;
-      overflow:hidden;
-      width:100%;
-    }
-    .goal-progress .bar{
-      height:100%;
-      background:var(--accent);
-      transition:width .4s ease;
-      border-radius:999px;
-    }
-    .goal-progress .bar.over{background:var(--info)}
-    .goal-meta{
-      font:500 11px/1.2 var(--mono);
-      color:var(--muted);
-      display:flex;
-      justify-content:space-between;
-      margin-top:4px;
-    }
-    .goal-badge{
-      display:inline-flex;align-items:center;gap:5px;
-      font:600 10.5px/1 var(--mono);
-      padding:3px 8px;border-radius:999px;
-      background:var(--accent-soft);color:var(--accent);
-      margin-left:6px;
-    }
-    .goal-badge.reached{background:var(--info-soft);color:var(--info)}
-    .goal-toggle-row{
-      display:flex;align-items:center;gap:10px;
-      background:var(--sunk);
-      border-radius:var(--radius-sm);
-      padding:10px 12px;
-      margin-bottom:12px;
-      font-size:13px;
-      font-weight:600;
-    }
-    .goal-toggle-row input[type="checkbox"]{
-      width:auto;min-height:auto;margin:0;flex-shrink:0;
-    }
-    .reserve-color{
-      width:14px;height:14px;border-radius:50%;flex-shrink:0;
-      border:1px solid rgba(0,0,0,.06);
-    }
-    .goal-entity-tipo{
-      font:600 10.5px/1 var(--mono);
-      padding:3px 8px;border-radius:999px;
-      background:var(--sunk);color:var(--muted);
-    }
-  </style>
 </head>
 
 <body>
   <div id="app">
-    <div class="header">
-      <h1><i class="fas fa-coins"></i>MyCoin</h1>
-      <button class="menu-btn" id="menuToggle" aria-label="Abrir menu"><i class="fas fa-bars"></i></button>
-    </div>
+    <header class="app-header">
+      <button class="avatar" id="avatarBtn" aria-label="Editar perfil"></button>
+      <div class="greeting">
+        <span class="hi">Olá</span>
+        <strong id="profileName">Olá!</strong>
+      </div>
+      <button class="icon-btn" id="settingsBtn" aria-label="Configurações"><i class="fas fa-gear"></i></button>
+      <button class="icon-btn" id="menuToggle" aria-label="Abrir menu"><i class="fas fa-bars"></i></button>
+    </header>
+
+    <a class="demo-badge" id="demoBadge" href="index.html" title="Sair do modo de exemplo" hidden>dados de exemplo</a>
 
     <div class="menu-overlay" id="menuOverlay">
       <div class="menu-panel">
         <button class="menu-close" id="menuClose" aria-label="Fechar menu"><i class="fas fa-times"></i></button>
-        <button data-tab="tabHome" class="active"><i class="fas fa-chart-pie"></i> Início</button>
-        <button data-tab="tabEntry"><i class="fas fa-arrow-down"></i> Entradas</button>
+        <button data-tab="tabHome" class="active"><i class="fas fa-house"></i> Início</button>
         <button data-tab="tabHistory"><i class="fas fa-clock-rotate-left"></i> Histórico</button>
-        <button data-tab="tabReserve"><i class="fas fa-piggy-bank"></i> Reserva</button>
+        <button data-tab="tabReserve"><i class="fas fa-piggy-bank"></i> Guardado</button>
         <button data-tab="tabReports"><i class="fas fa-chart-line"></i> Fluxo Mensal</button>
         <button data-tab="tabData"><i class="fas fa-database"></i> Dados</button>
         <button data-tab="tabSettings"><i class="fas fa-gear"></i> Configurações</button>
       </div>
     </div>
 
-    <!-- HOME -->
+    <!-- INÍCIO -->
     <div id="tabHome" class="tab-content active">
-      <div id="budgetListContainer" class="budget-list" style="margin-top:6px"></div>
+      <section class="account-card">
+        <span class="account-label"><i class="fas fa-wallet"></i> Conta</span>
+        <div class="account-balance" id="accountBalance">R$ 0,00</div>
+      </section>
+
+      <nav class="quick-actions" aria-label="Ações rápidas">
+        <button id="actEntry"><span class="qa-icon in"><i class="fas fa-arrow-down"></i></span>Entrada</button>
+        <button id="actExpense"><span class="qa-icon out"><i class="fas fa-arrow-up"></i></span>Saída</button>
+        <button id="actSave"><span class="qa-icon save"><i class="fas fa-piggy-bank"></i></span>Guardar</button>
+        <button id="actRescue"><span class="qa-icon back"><i class="fas fa-hand-holding-dollar"></i></span>Resgatar</button>
+      </nav>
+
+      <h2 class="section-title plain">Total guardado</h2>
+      <button class="saved-row" id="savedRow">
+        <span class="saved-value" id="savedTotal">R$ 0,00</span>
+        <span class="saved-link">ver reservas <i class="fas fa-chevron-right"></i></span>
+      </button>
 
       <div class="report-grid">
         <div class="report-card">
-          <div class="label"><i class="fas fa-arrow-down" style="color:var(--ok)"></i> Entradas</div>
+          <div class="label"><i class="fas fa-arrow-down" style="color:var(--ok)"></i> Entradas do ciclo</div>
           <div class="value" id="totalEntries">R$ 0,00</div>
         </div>
         <div class="report-card">
-          <div class="label"><i class="fas fa-arrow-up" style="color:var(--accent)"></i> Saídas</div>
+          <div class="label"><i class="fas fa-arrow-up" style="color:var(--danger)"></i> Saídas do ciclo</div>
           <div class="value" id="totalExpenses">R$ 0,00</div>
-        </div>
-        <div class="report-card">
-          <div class="label"><i class="fas fa-wallet" style="color:var(--info)"></i> Disponível p/ alocar</div>
-          <div class="value" id="homePoolDisplay">R$ 0,00</div>
-        </div>
-        <div class="report-card">
-          <div class="label"><i class="fas fa-piggy-bank" style="color:var(--violet)"></i> Total em reservas</div>
-          <div class="value" id="homeReservesDisplay">R$ 0,00</div>
         </div>
       </div>
 
       <div class="chart-container">
-        <div class="chart-title"><i class="fas fa-chart-bar"></i> Fluxo mensal</div>
-        <div class="scrollable-chart" id="homeChartScroll">
-          <div class="scrollable-inner" id="homeChartInner">
-            <canvas id="homeChart"></canvas>
-          </div>
-        </div>
+        <div class="chart-title"><i class="fas fa-chart-area"></i> Fluxo mensal</div>
+        <div class="chart-box"><canvas id="homeChart"></canvas></div>
       </div>
     </div>
 
-    <!-- ENTRY -->
-    <div id="tabEntry" class="tab-content">
-      <h3 style="margin-bottom:12px;display:flex;gap:10px;align-items:center;font-size:18px;">
-        <i class="fas fa-arrow-down" style="color:var(--ok)"></i> Nova entrada
-      </h3>
-      <div class="entry-tab-inputs">
-        <input type="number" id="entryAmount" placeholder="Valor (R$)" step="0.01">
-        <input type="text" id="entryDesc" placeholder="Descrição (opcional)">
-        <select id="entryCategorySelect"><option value="">Sem categoria</option></select>
-        <button id="confirmEntryBtn" class="mk-btn pri" style="width:100%">
-          <i class="fas fa-check"></i> Registrar entrada
-        </button>
-      </div>
-
-      <hr style="margin:20px 0;border:none;border-top:1px solid var(--line);">
-
-      <h3 style="margin-bottom:12px;display:flex;gap:10px;align-items:center;font-size:18px;">
-        <i class="fas fa-arrow-right-arrow-left" style="color:var(--ok)"></i> Alocar recursos
-      </h3>
-      <div class="entry-tab-inputs">
-        <div style="background:var(--sunk);padding:12px 16px;border-radius:var(--radius-sm);font-weight:600;display:flex;justify-content:space-between;border:1px solid var(--line);">
-          <span>Disponível:</span>
-          <span id="entryPoolAllocDisplay" class="mono">R$ 0,00</span>
-        </div>
-        <input type="number" id="allocAmount" placeholder="Valor a alocar (R$)" step="0.01">
-        <select id="allocTargetSelect">
-          <option value="">Selecione um destino</option>
-          <optgroup label="Orçamentos" id="allocBudgetsGroup"></optgroup>
-          <optgroup label="Reservas" id="allocReservesGroup"></optgroup>
-        </select>
-        <button id="confirmAllocBtn" class="mk-btn success" style="width:100%">
-          <i class="fas fa-arrow-right"></i> Alocar
-        </button>
-      </div>
-    </div>
-
-    <!-- HISTORY -->
+    <!-- HISTÓRICO -->
     <div id="tabHistory" class="tab-content">
+      <h2 class="section-title plain">Histórico</h2>
       <div class="filter-group">
         <button class="active-filter" data-filter="all">Todos</button>
         <button data-filter="ENTRY">Entradas</button>
         <button data-filter="EXPENSE">Saídas</button>
-        <button data-filter="ALLOCATION">Alocações</button>
+        <button data-filter="ALLOCATION">Guardado</button>
         <button data-filter="RESERVE_RESCUE">Resgates</button>
       </div>
       <div id="historyList"></div>
     </div>
 
-    <!-- RESERVE -->
+    <!-- GUARDADO -->
     <div id="tabReserve" class="tab-content">
+      <h2 class="section-title plain">Total guardado</h2>
+      <div class="saved-total-big" id="reserveTotal">R$ 0,00</div>
+
       <div id="reserveArea"></div>
 
-      <!-- NOVO: gráfico de metas das reservas -->
-      <div class="reserve-chart-container">
-        <div class="chart-title"><i class="fas fa-bullseye"></i> Acompanhamento de Metas (Reservas)</div>
-        <div class="scrollable-chart" id="reserveGoalsScroll">
-          <div class="scrollable-inner" id="reserveGoalsInner">
-            <canvas id="reserveGoalsChart"></canvas>
-          </div>
-        </div>
+      <button class="mk-btn block" id="newReserveBtn" style="margin:14px 0 18px">
+        <i class="fas fa-plus"></i> Nova reserva
+      </button>
+
+      <div class="chart-container">
+        <div class="chart-title"><i class="fas fa-bullseye"></i> Acompanhamento de metas</div>
+        <div class="chart-box"><canvas id="reserveGoalsChart"></canvas></div>
       </div>
 
-      <div class="reserve-chart-container">
-        <div class="chart-title"><i class="fas fa-chart-area"></i> Crescimento vs Resgates (Reservas)</div>
-        <canvas id="reserveGrowthChart"></canvas>
+      <div class="chart-container">
+        <div class="chart-title"><i class="fas fa-chart-area"></i> Crescimento vs Resgates</div>
+        <div class="chart-box"><canvas id="reserveGrowthChart"></canvas></div>
       </div>
     </div>
 
-    <!-- REPORTS -->
+    <!-- DETALHE DA RESERVA -->
+    <div id="tabReserveDetail" class="tab-content">
+      <button class="back-btn" id="reserveBack"><i class="fas fa-arrow-left"></i> Guardado</button>
+      <div id="reserveDetailHead"></div>
+
+      <nav class="quick-actions" aria-label="Ações da reserva">
+        <button id="detailSave"><span class="qa-icon save"><i class="fas fa-piggy-bank"></i></span>Guardar</button>
+        <button id="detailRescue"><span class="qa-icon back"><i class="fas fa-hand-holding-dollar"></i></span>Resgatar</button>
+        <button id="detailGoal"><span class="qa-icon goal"><i class="fas fa-bullseye"></i></span>Meta</button>
+        <button id="detailEdit"><span class="qa-icon edit"><i class="fas fa-pen"></i></span>Editar</button>
+      </nav>
+
+      <div class="chart-container">
+        <div class="chart-title"><i class="fas fa-chart-area"></i> Crescimento vs Resgates</div>
+        <div class="chart-box"><canvas id="reserveDetailChart"></canvas></div>
+      </div>
+
+      <h3 class="section-title plain">Movimentações</h3>
+      <div id="reserveDetailHistory"></div>
+    </div>
+
+    <!-- FLUXO MENSAL -->
     <div id="tabReports" class="tab-content">
-      <h3 class="section-title"><i class="fas fa-chart-line" style="color:var(--ok)"></i> Fluxo Mensal</h3>
+      <h2 class="section-title plain">Fluxo mensal</h2>
       <div class="month-filter-row">
-        <label for="monthFilter"><i class="far fa-calendar-alt"></i> Mês:</label>
-        <select id="monthFilter"><option value="">Selecione um mês</option></select>
+        <label for="ddMonthFilter-btn"><i class="far fa-calendar-alt"></i> Mês</label>
+        <div class="dd" id="ddMonthFilter"></div>
       </div>
       <div id="reportsContainer"></div>
     </div>
 
-    <!-- DATA -->
+    <!-- DADOS -->
     <div id="tabData" class="tab-content">
-      <h3 style="display:flex;gap:10px;margin-bottom:12px;font-size:18px;align-items:center;">
-        <i class="fas fa-database"></i> Dados (JSON)
-      </h3>
-      <p style="font-size:13px;color:var(--muted);margin-bottom:12px;">
-        Copie o JSON abaixo para backup ou cole um JSON para restaurar os dados.
-      </p>
+      <h2 class="section-title plain">Dados</h2>
+      <p class="hint">Baixe um arquivo de backup ou importe um arquivo salvo antes.</p>
       <div class="json-actions">
-        <button id="copyJsonBtn"><i class="fas fa-copy"></i> Copiar JSON</button>
-        <button id="importJsonBtn" class="primary"><i class="fas fa-upload"></i> Importar JSON</button>
+        <button id="downloadJsonBtn" class="primary"><i class="fas fa-download"></i> Baixar backup</button>
+        <button id="importJsonBtn"><i class="fas fa-upload"></i> Importar arquivo</button>
       </div>
-      <textarea id="jsonTextarea" rows="8" style="width:100%;border-radius:var(--radius-sm);padding:14px;border:1px solid var(--line);margin:12px 0;font-size:12px;background:var(--surface);font-family:var(--mono);color:var(--ink);min-height:200px;"></textarea>
-      <button id="applyJsonBtn" class="mk-btn pri" style="width:100%">
-        <i class="fas fa-check"></i> Aplicar JSON
-      </button>
-      <input type="file" id="fileInput" accept=".json" style="display:none">
+      <details class="json-advanced">
+        <summary>Ver e colar JSON</summary>
+        <textarea id="jsonTextarea" rows="8" aria-label="JSON dos dados"></textarea>
+        <div class="json-actions">
+          <button id="copyJsonBtn"><i class="fas fa-copy"></i> Copiar</button>
+          <button id="applyJsonBtn" class="primary"><i class="fas fa-check"></i> Aplicar JSON</button>
+        </div>
+      </details>
+      <input type="file" id="fileInput" accept=".json,application/json" hidden>
     </div>
 
-    <!-- SETTINGS -->
+    <!-- CONFIGURAÇÕES -->
     <div id="tabSettings" class="tab-content">
-      <h3 class="section-title"><i class="fas fa-gear"></i> Configurações</h3>
+      <h2 class="section-title plain">Configurações</h2>
+
+      <div class="config-block">
+        <h4><i class="fas fa-user"></i> Perfil</h4>
+        <div class="desc">Seu nome e a cor principal do app.</div>
+        <label class="field-label" for="settingsName">Nome</label>
+        <input type="text" id="settingsName" placeholder="Como quer ser chamado?" maxlength="30">
+        <label class="field-label" for="settingsColor">Cor principal</label>
+        <div class="color-field">
+          <input type="color" id="settingsColor" value="#16a34a">
+          <span class="color-hex" id="settingsColorHex">#16a34a</span>
+        </div>
+        <button class="mk-btn pri block" id="settingsProfileSave"><i class="fas fa-check"></i> Salvar perfil</button>
+      </div>
 
       <div class="config-block">
         <h4><i class="fas fa-calendar-day"></i> Ciclo financeiro</h4>
@@ -690,159 +197,112 @@
       </div>
 
       <div class="config-block">
-        <h4><i class="fas fa-wallet"></i> Orçamentos</h4>
-        <div class="desc">Crie orçamentos para dividir seu dinheiro por finalidade.</div>
-        <div class="config-row">
-          <input type="text" id="settingsBudgetName" placeholder="Nome do orçamento" maxlength="40">
-          <input type="color" id="settingsBudgetColor" value="#16a34a" aria-label="Cor do orçamento">
-          <button id="settingsBudgetSave"><i class="fas fa-plus"></i> Criar</button>
-        </div>
-        <div id="settingsBudgetList"></div>
-      </div>
-
-      <div class="config-block">
-        <h4><i class="fas fa-piggy-bank"></i> Reservas</h4>
-        <div class="desc">Reservas são valores guardados fora dos orçamentos. Escolha nome e cor.</div>
-        <div class="config-row">
-          <input type="text" id="settingsReserveName" placeholder="Nome da reserva" maxlength="40">
-          <input type="color" id="settingsReserveColor" value="#7c3aed" aria-label="Cor da reserva">
-          <button id="settingsReserveSave"><i class="fas fa-plus"></i> Criar</button>
-        </div>
-        <div id="settingsReserveList"></div>
-      </div>
-
-      <div class="config-block">
         <h4><i class="fas fa-tags"></i> Categorias</h4>
         <div class="desc">Classifique entradas e saídas para ver relatórios por categoria.</div>
         <div class="config-row">
           <input type="text" id="settingsCatName" placeholder="Nome da categoria" maxlength="30">
-          <select id="settingsCatType">
-            <option value="ENTRY">Entrada</option>
-            <option value="EXPENSE">Saída</option>
-          </select>
+          <div class="dd" id="ddCatType"></div>
           <button id="settingsCatSave"><i class="fas fa-plus"></i> Criar</button>
         </div>
         <div id="settingsCatList"></div>
       </div>
     </div>
 
-    <!-- MODALS -->
-    <div class="modal-mask" id="modalTransfer">
+    <!-- MODAIS -->
+    <div class="modal-mask" id="modalMoney">
       <div class="modal-box">
-        <h3><i class="fas fa-arrow-right-arrow-left"></i> Transferir entre orçamentos</h3>
-        <select id="transferFromSelect"></select>
-        <select id="transferToSelect"></select>
-        <input type="number" id="transferAmount" placeholder="Valor" step="0.01">
+        <h3 id="modalMoneyTitle">Nova entrada</h3>
+        <label class="field-label" for="moneyAmount">Valor</label>
+        <input type="number" id="moneyAmount" placeholder="R$ 0,00" step="0.01" inputmode="decimal">
+        <label class="field-label" for="moneyDesc">Descrição</label>
+        <input type="text" id="moneyDesc" placeholder="Ex.: salário, mercado">
+        <label class="field-label">Categoria</label>
+        <div class="dd" id="ddMoneyCategory"></div>
+        <label class="field-label" for="moneyDate">Data</label>
+        <input type="date" id="moneyDate">
         <div class="modal-actions">
-          <button id="modalTransferCancel">Cancelar</button>
-          <button id="modalTransferConfirm" class="primary">Transferir</button>
+          <button id="moneyCancel">Cancelar</button>
+          <button id="moneyConfirm" class="primary">Confirmar</button>
         </div>
       </div>
     </div>
 
-    <div class="modal-mask" id="modalExpense">
+    <div class="modal-mask" id="modalMove">
       <div class="modal-box">
-        <h3><i class="fas fa-arrow-up" style="color:var(--accent)"></i> Registrar saída</h3>
-        <input type="number" id="modalExpenseAmount" placeholder="Valor (R$)" step="0.01">
-        <input type="text" id="modalExpenseDesc" placeholder="Descrição">
-        <select id="modalExpenseCategory"><option value="">Sem categoria</option></select>
+        <h3 id="modalMoveTitle">Guardar</h3>
+        <p class="modal-sub" id="modalMoveSub"></p>
+        <label class="field-label">Reserva</label>
+        <div class="dd" id="ddMoveReserve"></div>
+        <label class="field-label" for="moveAmount">Valor</label>
+        <input type="number" id="moveAmount" placeholder="R$ 0,00" step="0.01" inputmode="decimal">
         <div class="modal-actions">
-          <button id="modalExpenseCancel">Cancelar</button>
-          <button id="modalExpenseConfirm" class="primary">Confirmar</button>
+          <button id="moveCancel">Cancelar</button>
+          <button id="moveConfirm" class="primary">Confirmar</button>
         </div>
       </div>
     </div>
 
-    <div class="modal-mask" id="modalEditBudget">
+    <div class="modal-mask" id="modalTx">
       <div class="modal-box">
-        <h3><i class="fas fa-pen"></i> Editar orçamento</h3>
-        <input id="modalEditBudgetName" placeholder="Nome">
-        <input type="color" id="modalEditBudgetColor" value="#16a34a">
-        <input type="number" id="modalEditBudgetSetBalance" placeholder="Definir saldo manual (R$)" step="0.01">
-        <p style="font-size:11px;color:var(--muted);margin-top:-8px;margin-bottom:12px;line-height:1.4;">
-          <i class="fas fa-info-circle"></i> A alteração do saldo é apenas uma correção e <strong>não afeta o histórico nem os gráficos</strong>.
-        </p>
+        <h3 id="txTitle">Detalhes</h3>
+        <div class="tx-detail" id="txDetail"></div>
+        <div id="txEditFields">
+          <label class="field-label" for="txAmount">Valor</label>
+          <input type="number" id="txAmount" step="0.01" inputmode="decimal">
+          <label class="field-label" for="txDesc">Descrição</label>
+          <input type="text" id="txDesc">
+          <label class="field-label">Categoria</label>
+          <div class="dd" id="ddTxCategory"></div>
+          <label class="field-label" for="txDate">Data</label>
+          <input type="date" id="txDate">
+        </div>
         <div class="modal-actions">
-          <button id="modalEditBudgetCancel">Cancelar</button>
-          <button id="modalEditBudgetDelete" class="danger"><i class="fas fa-trash"></i> Excluir</button>
-          <button id="modalEditBudgetConfirm" class="primary">Salvar</button>
+          <button id="txClose">Fechar</button>
+          <button id="txDelete" class="danger"><i class="fas fa-trash"></i> Excluir</button>
+          <button id="txConfirm" class="primary">Salvar</button>
         </div>
       </div>
     </div>
 
-    <div class="modal-mask" id="modalRescue">
+    <div class="modal-mask" id="modalReserve">
       <div class="modal-box">
-        <h3><i class="fas fa-hand-holding-usd" style="color:var(--warn)"></i> Resgatar da reserva</h3>
-        <select id="rescueReserveSelect"></select>
-        <select id="rescueBudgetSelect"></select>
-        <input type="number" id="rescueAmount" placeholder="Valor a resgatar (R$)" step="0.01">
+        <h3 id="modalReserveTitle">Nova reserva</h3>
+        <label class="field-label" for="reserveName">Nome</label>
+        <input type="text" id="reserveName" placeholder="Ex.: viagem, emergência" maxlength="40">
+        <label class="field-label" for="reserveColor">Cor</label>
+        <div class="color-field">
+          <input type="color" id="reserveColor" value="#7c3aed">
+          <span class="color-hex" id="reserveColorHex">#7c3aed</span>
+        </div>
         <div class="modal-actions">
-          <button id="modalRescueCancel">Cancelar</button>
-          <button id="modalRescueConfirm" class="primary">Resgatar</button>
+          <button id="reserveCancel">Cancelar</button>
+          <button id="reserveDelete" class="danger"><i class="fas fa-trash"></i> Excluir</button>
+          <button id="reserveConfirm" class="primary">Salvar</button>
         </div>
       </div>
     </div>
 
-    <div class="modal-mask" id="modalEditTx">
-      <div class="modal-box">
-        <h3 id="editTxTitle">Editar transação</h3>
-        <div id="editTxTypeBanner" style="display:none;background:var(--warn-soft);color:var(--warn);padding:8px 12px;border-radius:var(--radius-sm);font-size:12px;margin-bottom:12px">
-          <i class="fas fa-info-circle"></i> Ajuste histórico — não altera o caixa atual.
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-          <input type="number" id="editTxAmount" placeholder="Valor (R$)" step="0.01">
-          <input type="date" id="editTxDate" placeholder="Data" style="margin-bottom:12px">
-        </div>
-        <input type="text" id="editTxDesc" placeholder="Descrição">
-        <select id="editTxCategory"><option value="">Sem categoria</option></select>
-        <div class="modal-actions">
-          <button id="editTxCancel">Cancelar</button>
-          <button id="editTxConfirm" class="primary">Salvar</button>
-        </div>
-      </div>
-    </div>
-
-    <div class="modal-mask" id="modalEditReserve">
-      <div class="modal-box">
-        <h3><i class="fas fa-pen"></i> Editar reserva</h3>
-        <input id="editReserveName" placeholder="Nome">
-        <input id="editReserveBalance" type="number" step="0.01" placeholder="Saldo (R$)" min="0">
-        <input type="color" id="editReserveColor" value="#7c3aed">
-        <div class="modal-actions">
-          <button id="editReserveCancel">Cancelar</button>
-          <button id="editReserveDelete" class="danger"><i class="fas fa-trash"></i> Excluir</button>
-          <button id="editReserveConfirm" class="primary">Salvar</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- NOVO: MODAL DE METAS -->
     <div class="modal-mask top-modal" id="modalEditGoal">
       <div class="modal-box">
-        <h3><i class="fas fa-bullseye" style="color:var(--accent)"></i> <span id="editGoalTitle">Meta</span></h3>
-        <p style="font-size:12.5px;color:var(--muted);margin-bottom:14px" id="editGoalSub"></p>
+        <h3><i class="fas fa-bullseye"></i> <span id="editGoalTitle">Meta</span></h3>
+        <p class="modal-sub" id="editGoalSub"></p>
 
         <div class="goal-toggle-row">
           <input type="checkbox" id="editGoalEnabled">
-          <label for="editGoalEnabled" style="margin:0;cursor:pointer;text-transform:none;letter-spacing:0;font-size:13px;font-weight:600;color:var(--ink)">
-            Ativar meta de atingimento para este item
-          </label>
+          <label for="editGoalEnabled">Ativar meta de atingimento para esta reserva</label>
         </div>
 
         <div id="editGoalFields" style="display:none">
-          <label for="editGoalTarget">Valor alvo (R$)</label>
-          <input type="number" id="editGoalTarget" placeholder="Ex: 5000" step="0.01" min="0">
-
-          <label for="editGoalStart">Ciclo inicial</label>
+          <label class="field-label" for="editGoalTarget">Valor alvo</label>
+          <input type="number" id="editGoalTarget" placeholder="Ex.: 5000" step="0.01" min="0" inputmode="decimal">
+          <label class="field-label" for="editGoalStart">Ciclo inicial</label>
           <input type="month" id="editGoalStart">
-
-          <label for="editGoalEnd">Ciclo final (opcional)</label>
+          <label class="field-label" for="editGoalEnd">Ciclo final (opcional)</label>
           <input type="month" id="editGoalEnd">
-
-          <div style="font-size:11.5px;color:var(--muted);background:var(--sunk);padding:10px;border-radius:var(--radius-sm);line-height:1.5;">
+          <p class="note">
             <i class="fas fa-info-circle"></i>
-            A meta é <b>acumulada</b>: o progresso considera o saldo atual do item no ciclo. Deixe o ciclo final vazio para meta contínua.
-          </div>
+            A meta é <b>acumulada</b>: o progresso considera o saldo atual da reserva. Deixe o ciclo final vazio para meta contínua.
+          </p>
         </div>
 
         <div class="modal-actions">
@@ -853,27 +313,25 @@
     </div>
 
     <div class="modal-mask" id="modalEditMes">
-      <div class="modal-box" style="max-width:560px">
+      <div class="modal-box wide">
         <h3 id="editMesTitle">Editar entradas e saídas do mês</h3>
-        <p id="editMesSub" style="font-size:12.5px;color:var(--muted);margin-bottom:8px;"></p>
+        <p class="modal-sub" id="editMesSub"></p>
 
         <div class="mes-add-card">
-          <div style="font-size:13px;font-weight:700;color:var(--ink)">
-            <i class="fas fa-plus-circle" style="color:var(--accent)"></i> Adicionar ajuste histórico
-          </div>
+          <div class="mes-add-head"><i class="fas fa-plus-circle"></i> Adicionar ajuste histórico</div>
           <div class="mes-add-tipo-toggle" id="mesAddTipoToggle">
             <button type="button" data-tipo="ENTRY" class="active"><i class="fas fa-arrow-down"></i> Entrada</button>
             <button type="button" data-tipo="EXPENSE"><i class="fas fa-arrow-up"></i> Saída</button>
           </div>
           <div class="row-2">
-            <input type="number" id="mesAddAmount" placeholder="Valor (R$)" step="0.01">
+            <input type="number" id="mesAddAmount" placeholder="Valor (R$)" step="0.01" inputmode="decimal">
             <input type="date" id="mesAddDate">
           </div>
           <input type="text" id="mesAddDesc" placeholder="Descrição (ex.: ajuste salário março)">
-          <select id="mesAddCategory"><option value="">Sem categoria</option></select>
+          <div class="dd" id="ddMesAddCategory"></div>
           <div class="aviso">
             <i class="fas fa-info-circle"></i>
-            <div>Cria um registro que afeta o <b>histórico, cards e gráficos</b>. Não mexe no caixa (pool e orçamentos).</div>
+            <div>Cria um registro que afeta o <b>histórico, cards e gráficos</b>. Não mexe no saldo da conta.</div>
           </div>
           <button type="button" class="mes-add-botao" id="mesAddBtn">
             <i class="fas fa-plus"></i> Adicionar ajuste
@@ -890,1789 +348,7 @@
     <div class="toast" id="toast"></div>
   </div>
 
-  <script>
-    (function () {
-      const STORAGE_KEY = 'financeiro_data';
-      const SCHEMA_VERSION = 2;
-
-      let state = {
-        schemaVersion: SCHEMA_VERSION,
-        entryPool: 0,
-        transactions: [],
-        budgets: [],
-        reserves: [],
-        categories: [],
-        cycleStartDay: 6,
-      };
-
-      let chartInstances = {};
-      let editingBudgetId = null;
-      let editingTxId = null;
-      let editingReserveId = null;
-      let editingGoalEntity = null; // { id, kind: 'budget' | 'reserve' }
-      let selectedMonth = '';
-      let selectedCategoryType = 'EXPENSE';
-      let mesAddTipo = 'ENTRY';
-
-      function generateId() { return Math.random().toString(36).substring(2, 10) + Date.now().toString(36); }
-
-      function formatCurrency(v) {
-        return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(v) || 0);
-      }
-
-      function getCycleRange(day) {
-        const now = new Date();
-        const y = now.getFullYear(), m = now.getMonth();
-        let start = new Date(y, m, day);
-        let end = new Date(y, m + 1, day);
-        end.setDate(end.getDate() - 1);
-        if (now < start) {
-          start = new Date(y, m - 1, day);
-          end = new Date(y, m, day);
-          end.setDate(end.getDate() - 1);
-        }
-        return { start, end };
-      }
-
-      // [FIX] getFinancialCycle sem "mês 0"
-      function getFinancialCycle(date) {
-        const d = new Date(date);
-        const day = state.cycleStartDay || 6;
-        let year = d.getFullYear();
-        let month = d.getMonth(); // 0-indexed
-        if (d.getDate() < day) {
-          month -= 1;
-          if (month < 0) { month = 11; year -= 1; }
-        }
-        return `${year}-${String(month + 1).padStart(2, '0')}`;
-      }
-
-      function formatMonthLabel(cycleKey) {
-        const [y, m] = cycleKey.split('-');
-        const date = new Date(parseInt(y), parseInt(m) - 1, 1);
-        const label = date.toLocaleString('pt-BR', { month: 'long', year: 'numeric' });
-        return label.charAt(0).toUpperCase() + label.slice(1);
-      }
-      function formatMonthShort(cycleKey) {
-        const [y, m] = cycleKey.split('-');
-        const date = new Date(parseInt(y), parseInt(m) - 1, 1);
-        const label = date.toLocaleString('pt-BR', { month: 'short' });
-        return label.replace('.', '') + '/' + String(y).slice(2);
-      }
-      function escapeHtml(s) {
-        return String(s == null ? '' : s)
-          .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-          .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-      }
-      function toISODateLocal(d) {
-        const x = new Date(d);
-        return `${x.getFullYear()}-${String(x.getMonth()+1).padStart(2,'0')}-${String(x.getDate()).padStart(2,'0')}`;
-      }
-      function isVisible(el) { return !!(el && el.offsetParent !== null); }
-
-      function showToast(msg) {
-        const el = document.getElementById('toast');
-        el.textContent = msg;
-        el.classList.add('show');
-        clearTimeout(el._timeout);
-        el._timeout = setTimeout(() => el.classList.remove('show'), 2500);
-      }
-
-      // ====== MIGRAÇÃO / PERSISTÊNCIA ======
-      function migrateState(parsed) {
-        const v = parsed.schemaVersion || 1;
-        if (v < 2) {
-          parsed.categories = parsed.categories || [];
-          parsed.budgets = (parsed.budgets || []).map(b => ({
-            color: '#16a34a',
-            targetAmount: 0,
-            ...b,
-            goal: b.goal || { enabled: false, targetAmount: 0, startCycle: '', endCycle: '' },
-          }));
-          parsed.reserves = (parsed.reserves || []).map((r, i) => ({
-            color: ['#7c3aed','#0d9488','#ea580c','#0369a1','#db2777'][i % 5] || '#7c3aed',
-            ...r,
-            goal: r.goal || { enabled: false, targetAmount: 0, startCycle: '', endCycle: '' },
-          }));
-          parsed.transactions = parsed.transactions || [];
-          parsed.entryPool = parsed.entryPool || 0;
-          parsed.cycleStartDay = parsed.cycleStartDay || 6;
-          parsed.schemaVersion = 2;
-        }
-        // Garante goal em todos, mesmo se veio de v2 sem campo
-        parsed.budgets = (parsed.budgets || []).map(b => ({
-          ...b,
-          goal: b.goal || { enabled: false, targetAmount: 0, startCycle: '', endCycle: '' },
-        }));
-        parsed.reserves = (parsed.reserves || []).map(r => ({
-          ...r,
-          goal: r.goal || { enabled: false, targetAmount: 0, startCycle: '', endCycle: '' },
-        }));
-        return parsed;
-      }
-
-      function saveState() {
-        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
-        catch (e) { console.warn('Erro ao salvar', e); }
-      }
-      function loadState() {
-        try {
-          const saved = localStorage.getItem(STORAGE_KEY);
-          if (saved) {
-            let parsed = JSON.parse(saved);
-            parsed = migrateState(parsed);
-            state = parsed;
-            return true;
-          }
-        } catch (e) { console.warn('Erro ao carregar', e); }
-        return false;
-      }
-
-      function getCategoryById(id) { return state.categories.find(c => c.id === id) || null; }
-      function getCategoriesByType(type) { return state.categories.filter(c => c.type === type); }
-
-      // ====== METAS ======
-      function goalIsActiveInCycle(goal, cycleKey) {
-        if (!goal || !goal.enabled) return false;
-        if (goal.startCycle && cycleKey < goal.startCycle) return false;
-        if (goal.endCycle && cycleKey > goal.endCycle) return false;
-        return true;
-      }
-      function computeGoalProgress(entity) {
-        if (!entity.goal || !entity.goal.enabled) return null;
-        const target = Number(entity.goal.targetAmount) || 0;
-        if (target <= 0) return null;
-        const current = Number(entity.currentBalance) || 0;
-        const pct = Math.min(100, Math.round((current / target) * 100));
-        return {
-          target,
-          current,
-          pct,
-          remaining: Math.max(0, target - current),
-          reached: current >= target,
-          over: current > target,
-        };
-      }
-
-      function openGoalModal(entity, kind) {
-        editingGoalEntity = { id: entity.id, kind };
-        const g = entity.goal || { enabled: false, targetAmount: 0, startCycle: '', endCycle: '' };
-        document.getElementById('editGoalTitle').textContent =
-          (kind === 'budget' ? 'Meta do orçamento' : 'Meta da reserva');
-        document.getElementById('editGoalSub').textContent =
-          (kind === 'budget' ? 'Orçamento: ' : 'Reserva: ') + entity.name;
-        document.getElementById('editGoalEnabled').checked = !!g.enabled;
-        document.getElementById('editGoalTarget').value = g.targetAmount || '';
-        document.getElementById('editGoalStart').value = g.startCycle || '';
-        document.getElementById('editGoalEnd').value = g.endCycle || '';
-        document.getElementById('editGoalFields').style.display = g.enabled ? 'block' : 'none';
-        document.getElementById('modalEditGoal').classList.add('open');
-      }
-      document.getElementById('editGoalEnabled').addEventListener('change', (e) => {
-        document.getElementById('editGoalFields').style.display = e.target.checked ? 'block' : 'none';
-      });
-      document.getElementById('editGoalCancel').addEventListener('click', () => {
-        document.getElementById('modalEditGoal').classList.remove('open');
-        editingGoalEntity = null;
-      });
-      document.getElementById('editGoalConfirm').addEventListener('click', () => {
-        if (!editingGoalEntity) return;
-        const { id, kind } = editingGoalEntity;
-        const list = kind === 'budget' ? state.budgets : state.reserves;
-        const entity = list.find(x => x.id === id);
-        if (!entity) return;
-        const enabled = document.getElementById('editGoalEnabled').checked;
-        const targetAmount = parseFloat(document.getElementById('editGoalTarget').value) || 0;
-        const startCycle = document.getElementById('editGoalStart').value || '';
-        const endCycle = document.getElementById('editGoalEnd').value || '';
-        if (enabled && (!targetAmount || targetAmount <= 0)) { showToast('Informe um valor alvo > 0.'); return; }
-        if (enabled && !startCycle) { showToast('Informe o ciclo inicial.'); return; }
-        if (enabled && endCycle && endCycle < startCycle) { showToast('Ciclo final deve ser depois do inicial.'); return; }
-        entity.goal = { enabled, targetAmount, startCycle, endCycle };
-        document.getElementById('modalEditGoal').classList.remove('open');
-        editingGoalEntity = null;
-        renderAll();
-        showToast(enabled ? 'Meta salva!' : 'Meta desativada.');
-      });
-
-      // ====== RENDER ======
-      function renderCategorySelects() {
-        const entrySelect = document.getElementById('entryCategorySelect');
-        if (entrySelect) {
-          entrySelect.innerHTML = '<option value="">Sem categoria</option>';
-          getCategoriesByType('ENTRY').forEach(c => {
-            const opt = document.createElement('option');
-            opt.value = c.id; opt.textContent = c.name;
-            entrySelect.appendChild(opt);
-          });
-        }
-        const expenseSelect = document.getElementById('modalExpenseCategory');
-        if (expenseSelect) {
-          expenseSelect.innerHTML = '<option value="">Sem categoria</option>';
-          getCategoriesByType('EXPENSE').forEach(c => {
-            const opt = document.createElement('option');
-            opt.value = c.id; opt.textContent = c.name;
-            expenseSelect.appendChild(opt);
-          });
-        }
-      }
-
-      function destroyChart(key) {
-        if (chartInstances[key]) {
-          try { chartInstances[key].destroy(); } catch (e) {}
-          delete chartInstances[key];
-        }
-      }
-
-      function renderAll() {
-        saveState();
-        renderBudgets();
-        renderReports();
-        renderHistory();
-        renderReserve();
-        renderSettings();
-        renderCategorySelects();
-        populateTransferSelects();
-        populateAllocSelects();
-        populateRescueSelects();
-        updateJsonTextarea();
-        renderMonthFilter();
-        updateHomeIndicators();
-
-        const modalMes = document.getElementById('modalEditMes');
-        if (modalMes && modalMes.classList.contains('open') && selectedMonth) {
-          renderMesEditList();
-        }
-
-        if (isVisible(document.getElementById('tabReports'))) {
-          renderSelectedMonthReport();
-        }
-        if (isVisible(document.getElementById('homeChartScroll')) ||
-            isVisible(document.getElementById('reserveGrowthChart')) ||
-            isVisible(document.getElementById('reserveGoalsChart'))) {
-          renderAllCharts();
-        }
-      }
-
-      function updateHomeIndicators() {
-        const poolEl = document.getElementById('homePoolDisplay');
-        if (poolEl) poolEl.textContent = formatCurrency(state.entryPool || 0);
-        const resEl = document.getElementById('homeReservesDisplay');
-        if (resEl) resEl.textContent = formatCurrency(state.reserves.reduce((a, r) => a + (r.currentBalance || 0), 0));
-        const allocEl = document.getElementById('entryPoolAllocDisplay');
-        if (allocEl) allocEl.textContent = formatCurrency(state.entryPool || 0);
-      }
-
-      function renderBudgets() {
-        const container = document.getElementById('budgetListContainer');
-        container.innerHTML = '';
-        if (!state.budgets.length) {
-          container.innerHTML = '<div style="padding:20px;background:var(--sunk);border-radius:var(--radius);text-align:center;color:var(--muted);font-size:13px;"><i class="fas fa-wallet"></i> Nenhum orçamento. Crie um em <b>Configurações</b>.</div>';
-          return;
-        }
-        state.budgets.forEach(b => {
-          const div = document.createElement('div');
-          div.className = 'budget-item';
-          const prog = computeGoalProgress(b);
-          const progressHtml = prog ? `
-            <div class="goal-progress"><div class="bar${prog.over ? ' over' : ''}" style="width:${prog.pct}%"></div></div>
-            <div class="goal-meta">
-              <span>Meta: ${formatCurrency(prog.target)} · ${prog.pct}%</span>
-              <span>${prog.reached ? '✓ atingida' : 'faltam ' + formatCurrency(prog.remaining)}</span>
-            </div>` : '';
-          div.innerHTML = `
-          <div class="budget-left" style="flex-direction:column;align-items:stretch;gap:4px">
-            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-              <span class="budget-color" style="background:${b.color || '#16a34a'}"></span>
-              <span class="budget-name">${escapeHtml(b.name)}</span>
-              ${prog ? `<span class="goal-badge${prog.reached ? ' reached' : ''}"><i class="fas fa-bullseye"></i> meta</span>` : ''}
-              <span class="budget-balance" style="margin-left:auto">${formatCurrency(b.currentBalance)}</span>
-            </div>
-            ${progressHtml}
-          </div>
-          <div class="budget-actions">
-            <button data-action="goal" data-id="${b.id}" title="Meta"><i class="fas fa-bullseye" style="color:${b.goal?.enabled ? 'var(--accent)' : 'var(--muted)'}"></i></button>
-            <button data-action="expense" data-id="${b.id}" title="Saída"><i class="fas fa-arrow-up" style="color:var(--accent)"></i></button>
-            <button data-action="editBudget" data-id="${b.id}" title="Config"><i class="fas fa-pen"></i></button>
-            <button data-action="transfer" data-id="${b.id}" title="Transferir"><i class="fas fa-right-left"></i></button>
-            <button data-action="rescue" data-id="${b.id}" title="Resgatar da reserva"><i class="fas fa-hand-holding-usd" style="color:var(--warn)"></i></button>
-          </div>
-        `;
-          container.appendChild(div);
-        });
-        container.querySelectorAll('[data-action="goal"]').forEach(btn => btn.addEventListener('click', () => {
-          const b = state.budgets.find(x => x.id === btn.dataset.id);
-          if (b) openGoalModal(b, 'budget');
-        }));
-        container.querySelectorAll('[data-action="expense"]').forEach(btn => btn.addEventListener('click', () => openExpenseModal(btn.dataset.id)));
-        container.querySelectorAll('[data-action="editBudget"]').forEach(btn => btn.addEventListener('click', () => openEditBudgetModal(btn.dataset.id)));
-        container.querySelectorAll('[data-action="transfer"]').forEach(btn => btn.addEventListener('click', () => openTransferModal(btn.dataset.id)));
-        container.querySelectorAll('[data-action="rescue"]').forEach(btn => btn.addEventListener('click', () => openRescueModal(btn.dataset.id)));
-      }
-
-      function renderReports() {
-        const cycle = getCycleRange(state.cycleStartDay || 6);
-        const totalEntries = state.transactions.filter(t =>
-          t.type === 'ENTRY' && new Date(t.date) >= cycle.start && new Date(t.date) <= cycle.end
-        ).reduce((acc, t) => acc + t.amount, 0);
-        const totalExpenses = state.transactions.filter(t =>
-          t.type === 'EXPENSE' && new Date(t.date) >= cycle.start && new Date(t.date) <= cycle.end
-        ).reduce((acc, t) => acc + t.amount, 0);
-        document.getElementById('totalEntries').textContent = formatCurrency(totalEntries);
-        document.getElementById('totalExpenses').textContent = formatCurrency(totalExpenses);
-      }
-
-      function renderHistory() {
-        const container = document.getElementById('historyList');
-        container.innerHTML = '';
-        const filter = document.querySelector('#tabHistory .active-filter')?.dataset.filter || 'all';
-        let list = state.transactions
-          .filter(t => t.type !== 'ADJUSTMENT')
-          .sort((a, b) => new Date(b.date) - new Date(a.date));
-        if (filter !== 'all') list = list.filter(t => t.type === filter);
-        if (list.length === 0) {
-          container.innerHTML = '<div style="padding:20px;text-align:center;color:var(--muted);"><i class="fas fa-inbox"></i> Nenhuma transação</div>';
-          return;
-        }
-        list.forEach(t => {
-          const div = document.createElement('div');
-          div.className = 'history-item';
-          const isEntry = (t.type === 'ENTRY' || t.type === 'ALLOCATION');
-          const sign = isEntry ? '+' : '-';
-          const cls = isEntry ? 'positive' : 'negative';
-          const canEdit = t.type === 'ENTRY' || t.type === 'EXPENSE';
-          let categoryTag = '';
-          if (t.categoryId) {
-            const cat = getCategoryById(t.categoryId);
-            if (cat) categoryTag = `<span class="history-category-tag" style="background:${cat.color}22;color:${cat.color}">${escapeHtml(cat.name)}</span>`;
-          }
-          const budgetTag = t.budgetName ? `<span class="history-category-tag" style="background:var(--sunk);color:var(--muted)">${escapeHtml(t.budgetName)}</span>` : '';
-          const histTag = t.historicalAdjustment ? `<span class="history-category-tag" style="background:var(--warn-soft);color:var(--warn)">Ajuste</span>` : '';
-          div.innerHTML = `
-          <div style="flex:1;min-width:0;">
-            <span class="desc">${escapeHtml(t.description || t.type)}</span> ${categoryTag} ${budgetTag} ${histTag}
-            <span style="font-size:12px;color:var(--muted);display:block;">${new Date(t.date).toLocaleDateString('pt-BR')}</span>
-          </div>
-          <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
-            <span class="val ${cls}">${sign} ${formatCurrency(t.amount)}</span>
-            ${canEdit ? `<button class="history-edit-btn" data-edit-id="${t.id}" title="Editar"><i class="fas fa-pen"></i></button>` : ''}
-            <button class="history-delete-btn" data-id="${t.id}" title="Excluir"><i class="fas fa-trash"></i></button>
-          </div>`;
-          container.appendChild(div);
-        });
-        container.querySelectorAll('.history-delete-btn').forEach(btn => {
-          btn.addEventListener('click', () => {
-            if (confirm('Tem certeza que deseja excluir esta transação? O saldo será revertido.')) deleteTransaction(btn.dataset.id);
-          });
-        });
-        container.querySelectorAll('.history-edit-btn').forEach(btn => btn.addEventListener('click', () => openEditTxModal(btn.dataset.editId)));
-      }
-
-      // [FIX] exclusão de ALLOCATION reverte ao pool quando aplicável
-      function deleteTransaction(transactionId) {
-        const t = state.transactions.find(tx => tx.id === transactionId);
-        if (!t) return;
-        const isHistorical = !!t.historicalAdjustment;
-        if (!isHistorical) {
-          if (t.type === 'ENTRY') {
-            state.entryPool = Math.max(0, (state.entryPool || 0) - t.amount);
-          } else if (t.type === 'EXPENSE') {
-            if (t.fromId) { const b = state.budgets.find(x => x.id === t.fromId); if (b) b.currentBalance = (b.currentBalance || 0) + t.amount; }
-          } else if (t.type === 'ALLOCATION') {
-            const toIsReserve = state.reserves.some(r => r.id === t.toId);
-            const toIsBudget  = state.budgets.some(b => b.id === t.toId);
-            const fromIsBudget = state.budgets.some(b => b.id === t.fromId);
-            if (toIsReserve) {
-              const r = state.reserves.find(x => x.id === t.toId);
-              if (r) r.currentBalance = Math.max(0, (r.currentBalance || 0) - t.amount);
-              if (!t.fromId) state.entryPool = (state.entryPool || 0) + t.amount;
-              else if (fromIsBudget) {
-                const fb = state.budgets.find(x => x.id === t.fromId);
-                if (fb) fb.currentBalance += t.amount;
-              }
-            } else if (toIsBudget) {
-              const tb = state.budgets.find(x => x.id === t.toId);
-              if (tb) tb.currentBalance = Math.max(0, (tb.currentBalance || 0) - t.amount);
-              if (!t.fromId) state.entryPool = (state.entryPool || 0) + t.amount;
-              else if (fromIsBudget) {
-                const fb = state.budgets.find(x => x.id === t.fromId);
-                if (fb) fb.currentBalance += t.amount;
-              }
-            }
-          } else if (t.type === 'RESERVE_RESCUE') {
-            if (t.fromId) { const r = state.reserves.find(x => x.id === t.fromId); if (r) r.currentBalance = (r.currentBalance || 0) + t.amount; }
-            if (t.toId) { const b = state.budgets.find(x => x.id === t.toId); if (b) b.currentBalance = Math.max(0, (b.currentBalance || 0) - t.amount); }
-          }
-        }
-        state.transactions = state.transactions.filter(tx => tx.id !== transactionId);
-        renderAll();
-        showToast('Transação excluída!');
-      }
-
-      function openEditTxModal(txId, fromMesModal) {
-        editingTxId = txId;
-        const t = state.transactions.find(x => x.id === txId);
-        if (!t) return;
-        if (t.type !== 'ENTRY' && t.type !== 'EXPENSE') { showToast('Esta transação não pode ser editada.'); return; }
-        const isEntry = t.type === 'ENTRY';
-        document.getElementById('editTxTitle').textContent = isEntry ? 'Editar entrada' : 'Editar saída';
-        document.getElementById('editTxAmount').value = t.amount;
-        document.getElementById('editTxDesc').value = t.description || '';
-        document.getElementById('editTxDate').value = toISODateLocal(t.date);
-        const banner = document.getElementById('editTxTypeBanner');
-        banner.style.display = t.historicalAdjustment ? 'block' : 'none';
-        const sel = document.getElementById('editTxCategory');
-        sel.innerHTML = '<option value="">Sem categoria</option>';
-        getCategoriesByType(isEntry ? 'ENTRY' : 'EXPENSE').forEach(c => {
-          const o = document.createElement('option');
-          o.value = c.id; o.textContent = c.name;
-          if (c.id === t.categoryId) o.selected = true;
-          sel.appendChild(o);
-        });
-        const modal = document.getElementById('modalEditTx');
-        modal.classList.toggle('top-modal', !!fromMesModal);
-        modal.classList.add('open');
-      }
-
-      function saveEditTx() {
-        const t = state.transactions.find(x => x.id === editingTxId);
-        if (!t) {
-          document.getElementById('modalEditTx').classList.remove('open', 'top-modal');
-          editingTxId = null;
-          return;
-        }
-        const novoValor = parseFloat(document.getElementById('editTxAmount').value);
-        const novaDesc = document.getElementById('editTxDesc').value.trim();
-        const novaCat = document.getElementById('editTxCategory').value;
-        const novaDataStr = document.getElementById('editTxDate').value;
-        if (!novoValor || novoValor <= 0) { showToast('Valor inválido'); return; }
-        if (!novaDataStr) { showToast('Data inválida'); return; }
-
-        const isHistorical = !!t.historicalAdjustment;
-        const valorAntigo = t.amount;
-        const diff = novoValor - valorAntigo;
-
-        if (!isHistorical) {
-          if (t.type === 'ENTRY') {
-            const novoPool = (state.entryPool || 0) + diff;
-            if (novoPool < 0) { showToast('Não é possível reduzir: parte já foi alocada.'); return; }
-            state.entryPool = novoPool;
-          } else if (t.type === 'EXPENSE') {
-            const b = state.budgets.find(x => x.id === t.fromId);
-            if (b) {
-              const disponivel = b.currentBalance + valorAntigo;
-              if (novoValor > disponivel) { showToast('Saldo insuficiente para esse novo valor.'); return; }
-              b.currentBalance = disponivel - novoValor;
-            }
-          }
-        }
-        t.amount = novoValor;
-        t.description = novaDesc || t.description;
-        t.categoryId = novaCat || undefined;
-        const d = new Date(novaDataStr + 'T00:00:00');
-        const hora = new Date(t.date);
-        d.setHours(hora.getHours(), hora.getMinutes(), 0, 0);
-        t.date = d.toISOString();
-
-        document.getElementById('modalEditTx').classList.remove('open', 'top-modal');
-        editingTxId = null;
-        renderAll();
-        showToast('Transação atualizada!');
-      }
-
-      function openEditMesModal(mesKey) {
-        if (!mesKey) { showToast('Selecione um mês primeiro.'); return; }
-        selectedMonth = mesKey;
-        const label = formatMonthLabel(mesKey);
-        document.getElementById('editMesTitle').textContent = 'Editar ' + label;
-        document.getElementById('editMesSub').textContent = 'Edite, exclua ou crie ajustes históricos. Nada aqui afeta o caixa atual.';
-        document.getElementById('editMesClose').onclick = () => {
-          document.getElementById('modalEditMes').classList.remove('open');
-          renderAll();
-        };
-
-        const [y, m] = mesKey.split('-');
-        const dataSugerida = new Date(parseInt(y), parseInt(m) - 1, 15);
-        const cycleStartDay = state.cycleStartDay || 6;
-        const diaNoCiclo = dataSugerida.getDate() >= cycleStartDay ? dataSugerida.getDate() : cycleStartDay;
-        const dataOK = new Date(parseInt(y), parseInt(m) - 1, Math.min(diaNoCiclo, 28));
-        document.getElementById('mesAddDate').value = toISODateLocal(dataOK);
-        document.getElementById('mesAddAmount').value = '';
-        document.getElementById('mesAddDesc').value = '';
-        mesAddTipo = 'ENTRY';
-        document.querySelectorAll('#mesAddTipoToggle button').forEach(b => {
-          b.classList.toggle('active', b.dataset.tipo === 'ENTRY');
-        });
-        atualizarCategoriasMesAdd();
-        renderMesEditList();
-        document.getElementById('modalEditMes').classList.add('open');
-      }
-
-      function atualizarCategoriasMesAdd() {
-        const sel = document.getElementById('mesAddCategory');
-        sel.innerHTML = '<option value="">Sem categoria</option>';
-        getCategoriesByType(mesAddTipo).forEach(c => {
-          const o = document.createElement('option');
-          o.value = c.id; o.textContent = c.name;
-          sel.appendChild(o);
-        });
-      }
-
-      function renderMesEditList() {
-        const container = document.getElementById('mesEditList');
-        if (!container || !selectedMonth) return;
-        const lista = state.transactions
-          .filter(t => (t.type === 'ENTRY' || t.type === 'EXPENSE') && getFinancialCycle(new Date(t.date)) === selectedMonth)
-          .sort((a, b) => new Date(b.date) - new Date(a.date));
-        if (!lista.length) {
-          container.innerHTML = '<div class="mes-edit-vazio"><i class="fas fa-inbox"></i><br>Nenhuma entrada ou saída neste mês.</div>';
-          return;
-        }
-        container.innerHTML = '';
-        lista.forEach(t => {
-          const isEntry = t.type === 'ENTRY';
-          const cat = t.categoryId ? getCategoryById(t.categoryId) : null;
-          const bName = t.budgetName || '';
-          const histTag = t.historicalAdjustment ? `<span class="mes-edit-tipo" style="background:var(--warn-soft);color:var(--warn)">Ajuste</span>` : '';
-          const div = document.createElement('div');
-          div.className = 'mes-edit-linha';
-          div.innerHTML = `
-            <div class="mes-edit-info">
-              <div class="mes-edit-desc">${escapeHtml(t.description || (isEntry ? 'Entrada' : 'Saída'))}</div>
-              <div class="mes-edit-meta">
-                <span class="mes-edit-tipo ${isEntry ? 'entry' : 'expense'}">${isEntry ? 'Entrada' : 'Saída'}</span>
-                ${histTag}
-                ${cat ? `<span class="mes-edit-tipo" style="background:${cat.color}22;color:${cat.color}">${escapeHtml(cat.name)}</span>` : ''}
-                ${bName ? `<span>${escapeHtml(bName)}</span>` : ''}
-                <span>${new Date(t.date).toLocaleDateString('pt-BR')}</span>
-              </div>
-            </div>
-            <div style="text-align:right">
-              <div class="mes-edit-val ${isEntry ? 'pos' : 'neg'}">${isEntry ? '+' : '−'} ${formatCurrency(t.amount)}</div>
-              <div class="mes-edit-acoes">
-                <button data-edit-mes="${t.id}" title="Editar"><i class="fas fa-pen"></i></button>
-                <button data-del-mes="${t.id}" title="Excluir"><i class="fas fa-trash"></i></button>
-              </div>
-            </div>`;
-          container.appendChild(div);
-        });
-        container.querySelectorAll('[data-edit-mes]').forEach(btn => {
-          btn.addEventListener('click', () => openEditTxModal(btn.dataset.editMes, true));
-        });
-        container.querySelectorAll('[data-del-mes]').forEach(btn => {
-          btn.addEventListener('click', () => {
-            if (confirm('Excluir esta transação?')) deleteTransaction(btn.dataset.delMes);
-          });
-        });
-      }
-
-      function renderReserve() {
-        const container = document.getElementById('reserveArea');
-        container.innerHTML = '';
-        if (!state.reserves.length) {
-          container.innerHTML = '<div style="padding:20px;background:var(--sunk);border-radius:var(--radius);text-align:center;color:var(--muted);font-size:13px;"><i class="fas fa-piggy-bank"></i> Nenhuma reserva. Crie uma em <b>Configurações</b>.</div>';
-        } else {
-          state.reserves.forEach(r => {
-            const div = document.createElement('div');
-            div.className = 'reserve-card';
-            const prog = computeGoalProgress(r);
-            const progressHtml = prog ? `
-              <div class="goal-progress"><div class="bar${prog.over ? ' over' : ''}" style="width:${prog.pct}%"></div></div>
-              <div class="goal-meta">
-                <span>Meta: ${formatCurrency(prog.target)} · ${prog.pct}%</span>
-                <span>${prog.reached ? '✓ atingida' : 'faltam ' + formatCurrency(prog.remaining)}</span>
-              </div>` : '';
-            div.innerHTML = `
-            <div class="info">
-              <span class="name">
-                <span class="reserve-color" style="background:${r.color || '#7c3aed'}"></span>
-                ${escapeHtml(r.name)}
-                ${prog ? `<span class="goal-badge${prog.reached ? ' reached' : ''}"><i class="fas fa-bullseye"></i> meta</span>` : ''}
-              </span>
-              <span class="balance">${formatCurrency(r.currentBalance)}</span>
-              ${progressHtml}
-            </div>
-            <div class="actions">
-              <button data-reserve-goal="${r.id}" title="Meta"><i class="fas fa-bullseye" style="color:${r.goal?.enabled ? 'var(--accent)' : 'var(--muted)'}"></i></button>
-              <button data-reserve-edit="${r.id}" title="Editar"><i class="fas fa-pen"></i></button>
-            </div>`;
-            container.appendChild(div);
-          });
-          container.querySelectorAll('[data-reserve-edit]').forEach(btn => btn.addEventListener('click', () => openEditReserveModal(btn.dataset.reserveEdit)));
-          container.querySelectorAll('[data-reserve-goal]').forEach(btn => btn.addEventListener('click', () => {
-            const r = state.reserves.find(x => x.id === btn.dataset.reserveGoal);
-            if (r) openGoalModal(r, 'reserve');
-          }));
-        }
-
-        const total = state.reserves.reduce((a, r) => a + r.currentBalance, 0);
-        const graphDiv = document.createElement('div');
-        graphDiv.style.cssText = 'margin-top:16px;background:var(--sunk);padding:16px;border-radius:var(--radius);border:1px solid var(--line);';
-        graphDiv.innerHTML = `<div style="font-weight:600;display:flex;gap:8px;align-items:center;"><i class="fas fa-chart-line"></i> Total em reservas</div><div style="margin-top:10px;font:700 24px/1 var(--display);">${formatCurrency(total)}</div>`;
-        container.appendChild(graphDiv);
-      }
-
-      function renderSettings() {
-        const cycleInput = document.getElementById('settingsCycleDay');
-        if (cycleInput && document.activeElement !== cycleInput) cycleInput.value = state.cycleStartDay || 6;
-
-        const bList = document.getElementById('settingsBudgetList');
-        if (bList) {
-          bList.innerHTML = '';
-          if (!state.budgets.length) bList.innerHTML = '<div style="padding:10px 0;color:var(--muted);font-size:13px;">Nenhum orçamento criado.</div>';
-          else {
-            state.budgets.forEach(b => {
-              const hasGoal = b.goal?.enabled;
-              const div = document.createElement('div');
-              div.className = 'category-item';
-              div.innerHTML = `<div class="cat-left">
-                  <span class="cat-dot" style="background:${b.color || '#16a34a'}"></span>
-                  <span class="cat-name">${escapeHtml(b.name)}</span>
-                  ${hasGoal ? `<span class="goal-badge"><i class="fas fa-bullseye"></i> meta</span>` : ''}
-                </div>
-                <span class="cat-type">${formatCurrency(b.currentBalance)}</span>
-                <button class="cat-edit" data-goal-budget="${b.id}" title="Meta"><i class="fas fa-bullseye" style="color:${hasGoal ? 'var(--accent)' : 'var(--muted)'}"></i></button>
-                <button class="cat-delete" data-del-budget="${b.id}" title="Excluir"><i class="fas fa-trash"></i></button>`;
-              bList.appendChild(div);
-            });
-            bList.querySelectorAll('[data-goal-budget]').forEach(btn => btn.addEventListener('click', () => {
-              const b = state.budgets.find(x => x.id === btn.dataset.goalBudget);
-              if (b) openGoalModal(b, 'budget');
-            }));
-            bList.querySelectorAll('[data-del-budget]').forEach(btn => {
-              btn.addEventListener('click', () => {
-                const b = state.budgets.find(x => x.id === btn.dataset.delBudget);
-                if (!b) return;
-                if (confirm(`Excluir o orçamento "${b.name}"? Entradas e saídas do histórico serão preservadas.`)) {
-                  deleteBudget(b.id); renderAll(); showToast('Orçamento excluído.');
-                }
-              });
-            });
-          }
-        }
-
-        const rList = document.getElementById('settingsReserveList');
-        if (rList) {
-          rList.innerHTML = '';
-          if (!state.reserves.length) rList.innerHTML = '<div style="padding:10px 0;color:var(--muted);font-size:13px;">Nenhuma reserva criada.</div>';
-          else {
-            state.reserves.forEach(r => {
-              const hasGoal = r.goal?.enabled;
-              const div = document.createElement('div');
-              div.className = 'category-item';
-              div.innerHTML = `<div class="cat-left">
-                  <span class="cat-dot" style="background:${r.color || '#7c3aed'}"></span>
-                  <span class="cat-name">${escapeHtml(r.name)}</span>
-                  ${hasGoal ? `<span class="goal-badge"><i class="fas fa-bullseye"></i> meta</span>` : ''}
-                </div>
-                <span class="cat-type">${formatCurrency(r.currentBalance)}</span>
-                <button class="cat-edit" data-goal-reserve="${r.id}" title="Meta"><i class="fas fa-bullseye" style="color:${hasGoal ? 'var(--accent)' : 'var(--muted)'}"></i></button>
-                <button class="cat-delete" data-del-reserve="${r.id}" title="Excluir"><i class="fas fa-trash"></i></button>`;
-              rList.appendChild(div);
-            });
-            rList.querySelectorAll('[data-goal-reserve]').forEach(btn => btn.addEventListener('click', () => {
-              const r = state.reserves.find(x => x.id === btn.dataset.goalReserve);
-              if (r) openGoalModal(r, 'reserve');
-            }));
-            rList.querySelectorAll('[data-del-reserve]').forEach(btn => {
-              btn.addEventListener('click', () => {
-                const r = state.reserves.find(x => x.id === btn.dataset.delReserve);
-                if (!r) return;
-                if (confirm(`Excluir a reserva "${r.name}"?`)) {
-                  state.reserves = state.reserves.filter(x => x.id !== r.id); renderAll(); showToast('Reserva excluída.');
-                }
-              });
-            });
-          }
-        }
-
-        const cList = document.getElementById('settingsCatList');
-        if (cList) {
-          cList.innerHTML = '';
-          if (!state.categories.length) cList.innerHTML = '<div style="padding:10px 0;color:var(--muted);font-size:13px;">Nenhuma categoria criada.</div>';
-          else {
-            const renderCats = (title, tipo) => {
-              const cats = getCategoriesByType(tipo);
-              if (!cats.length) return;
-              const header = document.createElement('div');
-              header.style.cssText = 'margin:8px 0 4px;font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;';
-              header.innerHTML = `<i class="fas fa-${tipo === 'ENTRY' ? 'arrow-down' : 'arrow-up'}"></i> ${title}`;
-              cList.appendChild(header);
-              cats.forEach(c => {
-                const div = document.createElement('div');
-                div.className = 'category-item';
-                div.innerHTML = `<div class="cat-left"><span class="cat-dot" style="background:${c.color}"></span><span class="cat-name">${escapeHtml(c.name)}</span></div>
-                  <span class="cat-type">${tipo === 'ENTRY' ? 'Entrada' : 'Saída'}</span>
-                  <button class="cat-delete" data-del-cat="${c.id}" title="Excluir"><i class="fas fa-trash"></i></button>`;
-                cList.appendChild(div);
-              });
-            };
-            renderCats('Entradas', 'ENTRY');
-            renderCats('Saídas', 'EXPENSE');
-            cList.querySelectorAll('[data-del-cat]').forEach(btn => {
-              btn.addEventListener('click', () => {
-                if (confirm('Excluir esta categoria?')) {
-                  state.categories = state.categories.filter(c => c.id !== btn.dataset.delCat); renderAll(); showToast('Categoria excluída!');
-                }
-              });
-            });
-          }
-        }
-      }
-
-      function buildMonthlyData() {
-        const cycles = {};
-        state.transactions.forEach(t => {
-          if (t.type === 'ADJUSTMENT') return;
-          const cycle = getFinancialCycle(new Date(t.date));
-          if (!cycles[cycle]) cycles[cycle] = { name: cycle, entradas: 0, gastos: 0, crescimento: 0, resgates: 0, economia: 0, saldo: 0 };
-          const c = cycles[cycle];
-          if (t.type === 'ENTRY') c.entradas += t.amount;
-          else if (t.type === 'EXPENSE') c.gastos += t.amount;
-          else if (t.type === 'ALLOCATION') {
-            if (state.reserves.some(r => r.id === t.toId)) c.crescimento += t.amount;
-            else c.economia += t.amount;
-          } else if (t.type === 'RESERVE_RESCUE') c.resgates += t.amount;
-        });
-        Object.values(cycles).forEach(c => {
-          c.economia = Math.max(0, c.economia - c.gastos);
-          c.saldo = c.entradas - c.gastos;
-        });
-        let sorted = Object.values(cycles).sort((a, b) => a.name.localeCompare(b.name));
-        sorted = sorted.filter(c => c.entradas > 0 || c.gastos > 0 || c.crescimento > 0 || c.resgates > 0 || c.economia > 0);
-        return sorted;
-      }
-
-      // Metas agregadas por ciclo (soma de metas ativas no ciclo, proporcionais ao range)
-      function buildGoalsAggregateByCycle(cycles) {
-        return cycles.map(c => {
-          let target = 0;
-          state.budgets.concat(state.reserves).forEach(e => {
-            if (goalIsActiveInCycle(e.goal, c.name)) target += Number(e.goal.targetAmount) || 0;
-          });
-          return { cycle: c.name, target, current: (state.budgets.concat(state.reserves)).reduce((a, e) => a + (e.currentBalance || 0), 0) };
-        });
-      }
-
-      function buildCategoryTotals(monthKey, type) {
-        const totals = {};
-        state.transactions.forEach(t => {
-          if (t.type !== type) return;
-          if (getFinancialCycle(new Date(t.date)) !== monthKey) return;
-          const catId = t.categoryId || '__none__';
-          if (!totals[catId]) totals[catId] = 0;
-          totals[catId] += t.amount;
-        });
-        return Object.keys(totals).map(catId => {
-          const cat = catId === '__none__' ? null : getCategoryById(catId);
-          return { id: catId, name: cat ? cat.name : 'Sem categoria', color: cat ? cat.color : '#94a3b8', total: totals[catId] };
-        }).sort((a, b) => b.total - a.total);
-      }
-
-      function renderAllCharts() {
-        const data = buildMonthlyData();
-
-        // Limpa instâncias órfãs
-        Object.keys(chartInstances).forEach(key => {
-          const c = chartInstances[key];
-          if (!c) { delete chartInstances[key]; return; }
-          if (!document.body.contains(c.canvas)) {
-            try { c.destroy(); } catch (e) {}
-            delete chartInstances[key];
-          }
-        });
-
-        if (!data.length) {
-          ['homeChart', 'reserveGrowthChart', 'reserveGoalsChart'].forEach(id => {
-            const canvas = document.getElementById(id);
-            if (canvas && isVisible(canvas)) {
-              const ctx = canvas.getContext('2d');
-              ctx.clearRect(0, 0, canvas.width, canvas.height);
-              ctx.fillStyle = '#5e6b5c'; ctx.font = '14px IBM Plex Sans'; ctx.textAlign = 'center';
-              ctx.fillText('Sem dados', canvas.width / 2, canvas.height / 2);
-            }
-          });
-          return;
-        }
-        const labels = data.map(d => formatMonthLabel(d.name));
-
-        renderHomeChartScrollable(data, labels);
-
-        if (isVisible(document.getElementById('reserveGrowthChart'))) {
-          createAreaChart('reserveGrowthChart', {
-            labels,
-            datasets: [
-              { label: 'Crescimento (Depósitos)', data: data.map(d => d.crescimento), backgroundColor: 'rgba(22,163,74,0.15)', borderColor: '#16a34a', fill: true, tension: 0.3 },
-              { label: 'Resgates', data: data.map(d => d.resgates), borderColor: '#ea580c', borderDash: [5, 5], fill: false, tension: 0.3 }
-            ]
-          });
-        }
-
-        // NOVO: gráfico de metas (barras por ciclo: realizado x meta)
-        if (isVisible(document.getElementById('reserveGoalsChart'))) {
-          renderGoalsChart(data);
-        }
-      }
-
-      function renderGoalsChart(data) {
-        const canvas = document.getElementById('reserveGoalsChart');
-        const inner = document.getElementById('reserveGoalsInner');
-        if (!canvas || !inner) return;
-
-        const goalsAgg = buildGoalsAggregateByCycle(data);
-        const hasAnyGoal = goalsAgg.some(g => g.target > 0);
-        if (!hasAnyGoal) {
-          inner.style.width = '100%';
-          canvas.style.width = '100%';
-          canvas.style.height = '220px';
-          destroyChart('reserveGoalsChart');
-          const ctx = canvas.getContext('2d');
-          ctx.clearRect(0, 0, canvas.width, canvas.height);
-          ctx.fillStyle = '#5e6b5c';
-          ctx.font = '13px IBM Plex Sans';
-          ctx.textAlign = 'center';
-          ctx.fillText('Nenhuma meta ativa. Ative uma meta em um orçamento ou reserva.', canvas.width / 2, 100);
-          return;
-        }
-
-        const grupoWidth = 110;
-        const totalWidth = Math.max(280, data.length * grupoWidth + 60);
-        const H = 220;
-        inner.style.width = totalWidth + 'px';
-        inner.style.height = H + 'px';
-        canvas.style.width = totalWidth + 'px';
-        canvas.style.height = H + 'px';
-        canvas.width = totalWidth;
-        canvas.height = H;
-
-        destroyChart('reserveGoalsChart');
-        chartInstances['reserveGoalsChart'] = new Chart(canvas.getContext('2d'), {
-          type: 'bar',
-          data: {
-            labels: data.map(d => formatMonthLabel(d.name)),
-            datasets: [
-              {
-                label: 'Meta agregada',
-                data: goalsAgg.map(g => g.target),
-                backgroundColor: 'rgba(124,58,237,0.25)',
-                borderColor: '#7c3aed',
-                borderWidth: 2,
-                borderRadius: 4,
-                barPercentage: 0.7,
-                categoryPercentage: 0.7,
-              },
-              {
-                label: 'Saldo em reservas',
-                data: data.map(d => data.reduce((a, x) => a, 0) && 0) , // placeholder, calculado abaixo
-                backgroundColor: '#16a34a',
-                borderRadius: 4,
-                barPercentage: 0.7,
-                categoryPercentage: 0.7,
-              }
-            ]
-          },
-          options: {
-            responsive: false, maintainAspectRatio: false, animation: { duration: 300 },
-            plugins: {
-              legend: { labels: { boxWidth: 12, padding: 8, font: { size: 10, family: 'IBM Plex Sans' } } },
-              tooltip: { callbacks: { label: ctx => ctx.dataset.label + ': ' + formatCurrency(ctx.raw) } }
-            },
-            scales: {
-              y: { beginAtZero: true, grid: { color: '#eaf0e7' }, ticks: { font: { size: 9, family: 'IBM Plex Mono' }, callback: v => 'R$ ' + v.toFixed(0) } },
-              x: { grid: { display: false }, ticks: { font: { size: 9 }, maxRotation: 0, minRotation: 0, autoSkip: false } }
-            }
-          }
-        });
-
-        // Ajusta dataset de saldo em reservas por ciclo
-        const chart = chartInstances['reserveGoalsChart'];
-        chart.data.datasets[1].data = data.map(d => {
-          // Soma de saldo acumulado em reservas até aquele ciclo
-          let total = 0;
-          state.transactions.forEach(t => {
-            if (t.type === 'ALLOCATION' && state.reserves.some(r => r.id === t.toId)) {
-              if (getFinancialCycle(new Date(t.date)) <= d.name) total += t.amount;
-            }
-            if (t.type === 'RESERVE_RESCUE') {
-              if (getFinancialCycle(new Date(t.date)) <= d.name) total -= t.amount;
-            }
-          });
-          return Math.max(0, total);
-        });
-        chart.update('none');
-
-        requestAnimationFrame(() => {
-          const sw = document.getElementById('reserveGoalsScroll');
-          if (sw) sw.scrollLeft = 0;
-        });
-      }
-
-      function renderHomeChartScrollable(data, labels) {
-        const canvas = document.getElementById('homeChart');
-        const inner = document.getElementById('homeChartInner');
-        const scrollWrap = document.getElementById('homeChartScroll');
-        if (!canvas || !inner || !scrollWrap) return;
-        if (!isVisible(scrollWrap)) {
-          if (chartInstances['homeChart']) {
-            chartInstances['homeChart'].data.labels = labels;
-            chartInstances['homeChart'].data.datasets[0].data = data.map(d => d.entradas);
-            chartInstances['homeChart'].data.datasets[1].data = data.map(d => d.gastos);
-            chartInstances['homeChart'].update('none');
-          }
-          return;
-        }
-
-        const grupoWidth = 110;
-        const minWidth = 280;
-        const totalWidth = Math.max(minWidth, data.length * grupoWidth + 60);
-        const H = 220;
-
-        inner.style.width = totalWidth + 'px';
-        inner.style.height = H + 'px';
-        canvas.style.width = totalWidth + 'px';
-        canvas.style.height = H + 'px';
-        canvas.width = totalWidth;
-        canvas.height = H;
-
-        destroyChart('homeChart');
-        chartInstances['homeChart'] = new Chart(canvas.getContext('2d'), {
-          type: 'bar',
-          data: {
-            labels,
-            datasets: [
-              { label: 'Entradas', data: data.map(d => d.entradas), backgroundColor: '#16a34a', borderRadius: 6, barPercentage: 0.7, categoryPercentage: 0.7 },
-              { label: 'Saídas', data: data.map(d => d.gastos), backgroundColor: '#ea580c', borderRadius: 6, barPercentage: 0.7, categoryPercentage: 0.7 }
-            ]
-          },
-          options: {
-            responsive: false, maintainAspectRatio: false, animation: { duration: 300 },
-            plugins: {
-              legend: { labels: { boxWidth: 12, padding: 8, font: { size: 10, family: 'IBM Plex Sans' } } },
-              tooltip: { callbacks: { label: ctx => ctx.dataset.label + ': ' + formatCurrency(ctx.raw) } }
-            },
-            scales: {
-              y: { beginAtZero: true, grid: { color: '#eaf0e7' }, ticks: { font: { size: 9, family: 'IBM Plex Mono' }, callback: v => 'R$ ' + v.toFixed(0) } },
-              x: { grid: { display: false }, ticks: { font: { size: 9 }, maxRotation: 0, minRotation: 0, autoSkip: false } }
-            }
-          }
-        });
-
-        requestAnimationFrame(() => { scrollWrap.scrollLeft = scrollWrap.scrollWidth; });
-      }
-
-      function renderMonthFilter() {
-        const select = document.getElementById('monthFilter');
-        if (!select) return;
-        const data = buildMonthlyData();
-        const currentValue = select.value;
-        select.innerHTML = '<option value="">Selecione um mês</option>';
-        data.forEach(d => {
-          const opt = document.createElement('option');
-          opt.value = d.name; opt.textContent = formatMonthLabel(d.name);
-          select.appendChild(opt);
-        });
-        if (currentValue && data.some(d => d.name === currentValue)) {
-          select.value = currentValue; selectedMonth = currentValue;
-        } else if (data.length > 0) {
-          select.value = data[data.length - 1].name; selectedMonth = data[data.length - 1].name;
-        } else selectedMonth = '';
-      }
-
-      function renderSelectedMonthReport() {
-        const container = document.getElementById('reportsContainer');
-        if (!container) return;
-        if (!isVisible(container)) return;
-
-        const data = buildMonthlyData();
-        if (!data.length) {
-          container.innerHTML = '<div style="padding:40px 20px;text-align:center;color:var(--muted);"><i class="fas fa-chart-line" style="font-size:32px;margin-bottom:12px;display:block;"></i> Nenhum dado para exibir.</div>';
-          return;
-        }
-        const monthData = data.find(d => d.name === selectedMonth);
-        if (!monthData) {
-          container.innerHTML = '<div style="padding:40px 20px;text-align:center;color:var(--muted);"><i class="fas fa-calendar-times" style="font-size:32px;margin-bottom:12px;display:block;"></i> Selecione um mês acima.</div>';
-          return;
-        }
-        container.innerHTML = '';
-
-        const fluxBlock = document.createElement('div');
-        fluxBlock.className = 'month-report-block';
-        fluxBlock.innerHTML = `
-          <div class="month-report-header">
-            <h4>${formatMonthLabel(monthData.name)}</h4>
-            <div class="month-totals">
-              <span class="in"><i class="fas fa-arrow-down"></i> ${formatCurrency(monthData.entradas)}</span>
-              <span class="out"><i class="fas fa-arrow-up"></i> ${formatCurrency(monthData.gastos)}</span>
-            </div>
-          </div>
-          <div class="month-report-chart-wrap"><canvas id="monthFluxChart"></canvas></div>
-          ${monthData.economia > 0 ? `<div class="month-economy-badge"><i class="fas fa-piggy-bank"></i> Economia: ${formatCurrency(monthData.economia)}</div>` : ''}
-          <button class="mk-btn block sm" id="btn-edit-mes" style="margin-top:12px">
-            <i class="fas fa-pen"></i> Editar entradas e saídas do mês
-          </button>
-        `;
-        container.appendChild(fluxBlock);
-
-        fluxBlock.querySelector('#btn-edit-mes').addEventListener('click', () => openEditMesModal(monthData.name));
-
-        destroyChart('monthFluxChart');
-        chartInstances['monthFluxChart'] = new Chart(document.getElementById('monthFluxChart').getContext('2d'), {
-          type: 'bar',
-          data: {
-            labels: ['Entradas', 'Saídas'],
-            datasets: [{ label: 'Fluxo mensal', data: [monthData.entradas, monthData.gastos], backgroundColor: ['#16a34a', '#ea580c'], borderRadius: 6, barPercentage: 0.6 }]
-          },
-          options: {
-            responsive: true, maintainAspectRatio: false,
-            plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => formatCurrency(ctx.raw) } } },
-            scales: {
-              y: { beginAtZero: true, grid: { color: '#eaf0e7' }, ticks: { font: { size: 10, family: 'IBM Plex Mono' }, callback: v => 'R$ ' + v.toFixed(0) } },
-              x: { grid: { display: false }, ticks: { font: { size: 12, weight: '600' } } }
-            }
-          }
-        });
-
-        // NOVO: card de metas do mês
-        const goalsInMonth = state.budgets.concat(state.reserves).filter(e => goalIsActiveInCycle(e.goal, monthData.name));
-        if (goalsInMonth.length) {
-          const goalsBlock = document.createElement('div');
-          goalsBlock.className = 'month-report-block';
-          goalsBlock.style.marginTop = '18px';
-          goalsBlock.innerHTML = `
-            <div class="month-report-header"><h4><i class="fas fa-bullseye" style="color:var(--violet)"></i> Metas ativas no ciclo</h4></div>
-            <div style="display:grid;gap:10px">
-              ${goalsInMonth.map(e => {
-                const prog = computeGoalProgress(e);
-                const isReserve = state.reserves.some(r => r.id === e.id);
-                const color = e.color || (isReserve ? '#7c3aed' : '#16a34a');
-                return `<div>
-                  <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:4px">
-                    <div style="display:flex;align-items:center;gap:8px;min-width:0">
-                      <span style="width:10px;height:10px;border-radius:50%;background:${color};flex-shrink:0"></span>
-                      <strong style="font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(e.name)}</strong>
-                      <span class="goal-entity-tipo">${isReserve ? 'Reserva' : 'Orçamento'}</span>
-                    </div>
-                    <span style="font:600 12px var(--mono);color:${prog.reached ? 'var(--info)' : 'var(--muted)'}">${formatCurrency(e.currentBalance)} / ${formatCurrency(prog.target)}</span>
-                  </div>
-                  <div class="goal-progress"><div class="bar${prog.over ? ' over' : ''}" style="width:${prog.pct}%"></div></div>
-                </div>`;
-              }).join('')}
-            </div>
-          `;
-          container.appendChild(goalsBlock);
-        }
-
-        const balanceBlock = document.createElement('div');
-        balanceBlock.className = 'month-report-block';
-        balanceBlock.style.marginTop = '18px';
-        balanceBlock.innerHTML = `
-          <div class="month-report-header"><h4><i class="fas fa-chart-bar" style="color:var(--info)"></i> Saldo Mensal (Positivo / Negativo)</h4></div>
-          <div class="balance-chart-scroll-wrap"><div class="balance-chart-inner" id="balanceChartInner"><canvas id="balanceBarsChart"></canvas></div></div>
-          <div class="balance-summary" id="balanceSummary"></div>
-        `;
-        container.appendChild(balanceBlock);
-        setTimeout(() => renderBalanceBarsChart(data), 0);
-
-        const categoriesBlock = document.createElement('div');
-        categoriesBlock.className = 'month-report-block';
-        categoriesBlock.style.marginTop = '18px';
-        categoriesBlock.innerHTML = `
-          <div class="month-report-header"><h4><i class="fas fa-tags" style="color:var(--violet)"></i> Valores por Categoria — ${formatMonthLabel(monthData.name)}</h4></div>
-          <div class="cat-type-toggle" id="catTypeToggle">
-            <button data-type="EXPENSE" class="${selectedCategoryType === 'EXPENSE' ? 'active' : ''}"><i class="fas fa-arrow-up"></i> Saídas</button>
-            <button data-type="ENTRY" class="${selectedCategoryType === 'ENTRY' ? 'active' : ''}"><i class="fas fa-arrow-down"></i> Entradas</button>
-          </div>
-          <div class="categories-chart-scroll-wrap"><div class="categories-chart-inner" id="categoriesChartInner"><canvas id="categoriesChart"></canvas></div></div>
-          <div class="categories-summary" id="categoriesSummary"></div>
-        `;
-        container.appendChild(categoriesBlock);
-
-        document.querySelectorAll('#catTypeToggle button').forEach(btn => {
-          btn.addEventListener('click', () => {
-            selectedCategoryType = btn.dataset.type;
-            document.querySelectorAll('#catTypeToggle button').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            renderCategoriesChart();
-          });
-        });
-        setTimeout(() => renderCategoriesChart(), 0);
-      }
-
-      function renderCategoriesChart() {
-        const canvas = document.getElementById('categoriesChart');
-        const inner = document.getElementById('categoriesChartInner');
-        if (!canvas || !inner || !selectedMonth) return;
-        if (!isVisible(canvas)) return;
-        const totals = buildCategoryTotals(selectedMonth, selectedCategoryType);
-        if (totals.length === 0) {
-          inner.style.width = '100%';
-          canvas.style.width = '100%';
-          canvas.style.height = '120px';
-          destroyChart('categoriesChart');
-          const summaryEl = document.getElementById('categoriesSummary');
-          if (summaryEl) summaryEl.innerHTML = `<div style="width:100%;text-align:center;color:var(--muted);padding:20px;font-size:13px;"><i class="fas fa-inbox"></i> Nenhuma ${selectedCategoryType === 'ENTRY' ? 'entrada' : 'saída'} categorizada neste mês.</div>`;
-          return;
-        }
-        const barWidth = 60;
-        const totalWidth = Math.max(280, totals.length * barWidth + 60);
-        const H = 260;
-        inner.style.width = totalWidth + 'px';
-        inner.style.height = H + 'px';
-        canvas.style.width = totalWidth + 'px';
-        canvas.style.height = H + 'px';
-        canvas.width = totalWidth;
-        canvas.height = H;
-
-        destroyChart('categoriesChart');
-        chartInstances['categoriesChart'] = new Chart(canvas.getContext('2d'), {
-          type: 'bar',
-          data: {
-            labels: totals.map(t => t.name),
-            datasets: [{ label: selectedCategoryType === 'ENTRY' ? 'Entradas' : 'Saídas', data: totals.map(t => t.total), backgroundColor: totals.map(t => t.color), borderRadius: 4, barPercentage: 0.7, categoryPercentage: 0.8 }]
-          },
-          options: {
-            responsive: false, maintainAspectRatio: false, animation: { duration: 300 },
-            plugins: { legend: { display: false }, tooltip: { callbacks: { title: items => items[0].label, label: ctx => (selectedCategoryType === 'ENTRY' ? '+' : '−') + formatCurrency(ctx.raw) } } },
-            scales: {
-              y: { beginAtZero: true, grid: { color: '#eaf0e7' }, ticks: { font: { size: 10, family: 'IBM Plex Mono' }, callback: v => 'R$ ' + v.toFixed(0) } },
-              x: { grid: { display: false }, ticks: { font: { size: 10, weight: '600' }, maxRotation: 45, minRotation: 45, autoSkip: false } }
-            }
-          }
-        });
-        const summaryEl = document.getElementById('categoriesSummary');
-        if (summaryEl) {
-          const total = totals.reduce((a, b) => a + b.total, 0);
-          const top = totals[0];
-          const isEntry = selectedCategoryType === 'ENTRY';
-          summaryEl.innerHTML = `
-            <div class="item"><span class="lbl">Total</span><span class="vl ${isEntry ? 'pos' : 'neg'}">${isEntry ? '+' : '−'}${formatCurrency(total)}</span></div>
-            <div class="item"><span class="lbl">Categorias</span><span class="vl">${totals.length}</span></div>
-            <div class="item" style="min-width:120px;"><span class="lbl">Maior</span><span class="vl ${isEntry ? 'pos' : 'neg'}" style="font-size:12px;">${escapeHtml(top.name)}: ${formatCurrency(top.total)}</span></div>
-          `;
-        }
-      }
-
-      function renderBalanceBarsChart(data) {
-        const canvas = document.getElementById('balanceBarsChart');
-        const inner = document.getElementById('balanceChartInner');
-        if (!canvas || !inner) return;
-        if (!isVisible(canvas)) return;
-        const totalWidth = Math.max(280, data.length * 42 + 60);
-        const H = 260;
-        inner.style.width = totalWidth + 'px';
-        inner.style.height = H + 'px';
-        canvas.style.width = totalWidth + 'px';
-        canvas.style.height = H + 'px';
-        canvas.width = totalWidth;
-        canvas.height = H;
-
-        const labels = data.map(d => formatMonthShort(d.name));
-        const saldos = data.map(d => d.saldo);
-        const colors = saldos.map(s => s >= 0 ? '#16a34a' : '#ea580c');
-
-        destroyChart('balanceBarsChart');
-        chartInstances['balanceBarsChart'] = new Chart(canvas.getContext('2d'), {
-          type: 'bar',
-          data: { labels, datasets: [{ label: 'Saldo mensal', data: saldos, backgroundColor: colors, borderRadius: 3, barPercentage: 0.7, categoryPercentage: 0.8 }] },
-          options: {
-            responsive: false, maintainAspectRatio: false, animation: { duration: 300 },
-            plugins: {
-              legend: { display: false },
-              tooltip: { callbacks: { title: items => formatMonthLabel(data[items[0].dataIndex].name), label: ctx => 'Saldo: ' + (ctx.raw >= 0 ? '+' : '') + formatCurrency(ctx.raw) } }
-            },
-            scales: {
-              y: {
-                grid: { color: ctx => ctx.tick.value === 0 ? '#1a1f1a' : '#eaf0e7', lineWidth: ctx => ctx.tick.value === 0 ? 2 : 1 },
-                ticks: { font: { size: 10, family: 'IBM Plex Mono' }, callback: v => (v >= 0 ? '+' : '') + 'R$ ' + v.toFixed(0) }
-              },
-              x: { grid: { display: false }, ticks: { font: { size: 10, weight: '600' }, maxRotation: 0, minRotation: 0, autoSkip: false } }
-            }
-          }
-        });
-        const summaryEl = document.getElementById('balanceSummary');
-        if (summaryEl) {
-          const totalSaldo = saldos.reduce((a, b) => a + b, 0);
-          summaryEl.innerHTML = `
-            <div class="item" style="min-width:100%">
-              <span class="lbl">Saldo total</span>
-              <span class="vl ${totalSaldo >= 0 ? 'pos' : 'neg'}">${totalSaldo >= 0 ? '+' : ''}${formatCurrency(totalSaldo)}</span>
-            </div>
-          `;
-        }
-      }
-
-      function createAreaChart(canvasId, config) {
-        const canvas = document.getElementById(canvasId);
-        if (!canvas) return;
-        if (!isVisible(canvas)) {
-          if (chartInstances[canvasId]) {
-            chartInstances[canvasId].data = config;
-            chartInstances[canvasId].update('none');
-          }
-          return;
-        }
-        destroyChart(canvasId);
-        chartInstances[canvasId] = new Chart(canvas.getContext('2d'), {
-          type: 'line',
-          data: config,
-          options: {
-            responsive: true, maintainAspectRatio: false,
-            plugins: { legend: { labels: { boxWidth: 12, padding: 8, font: { size: 10, family: 'IBM Plex Sans' } } } },
-            scales: {
-              y: { beginAtZero: true, grid: { color: '#eaf0e7' }, ticks: { font: { size: 9, family: 'IBM Plex Mono' } } },
-              x: { grid: { display: false }, ticks: { font: { size: 9 }, maxRotation: 45, minRotation: 45 } }
-            }
-          }
-        });
-      }
-
-      function populateTransferSelects() {
-        ['transferFromSelect', 'transferToSelect'].forEach(id => {
-          const sel = document.getElementById(id);
-          if (!sel) return;
-          sel.innerHTML = '<option value="">Selecione</option>';
-          state.budgets.forEach(b => {
-            const opt = document.createElement('option'); opt.value = b.id; opt.textContent = b.name;
-            sel.appendChild(opt);
-          });
-        });
-      }
-      function populateAllocSelects() {
-        const budgetGroup = document.getElementById('allocBudgetsGroup');
-        const reserveGroup = document.getElementById('allocReservesGroup');
-        budgetGroup.innerHTML = ''; reserveGroup.innerHTML = '';
-        state.budgets.forEach(b => {
-          const opt = document.createElement('option');
-          opt.value = 'budget-' + b.id;
-          opt.textContent = `${b.name} (${formatCurrency(b.currentBalance)})`;
-          budgetGroup.appendChild(opt);
-        });
-        state.reserves.forEach(r => {
-          const opt = document.createElement('option');
-          opt.value = 'reserve-' + r.id;
-          opt.textContent = `${r.name} (${formatCurrency(r.currentBalance)})`;
-          reserveGroup.appendChild(opt);
-        });
-      }
-      function populateRescueSelects() {
-        const reserveSelect = document.getElementById('rescueReserveSelect');
-        const budgetSelect = document.getElementById('rescueBudgetSelect');
-        reserveSelect.innerHTML = '<option value="">Selecione a reserva</option>';
-        budgetSelect.innerHTML = '<option value="">Selecione o orçamento</option>';
-        state.reserves.forEach(r => {
-          const opt = document.createElement('option'); opt.value = r.id;
-          opt.textContent = `${r.name} (${formatCurrency(r.currentBalance)})`;
-          reserveSelect.appendChild(opt);
-        });
-        state.budgets.forEach(b => {
-          const opt = document.createElement('option'); opt.value = b.id; opt.textContent = b.name;
-          budgetSelect.appendChild(opt);
-        });
-      }
-
-      let expenseBudgetId = null;
-      function openExpenseModal(budgetId) {
-        expenseBudgetId = budgetId;
-        document.getElementById('modalExpenseAmount').value = '';
-        document.getElementById('modalExpenseDesc').value = '';
-        document.getElementById('modalExpenseCategory').value = '';
-        document.getElementById('modalExpense').classList.add('open');
-      }
-      document.getElementById('modalExpenseCancel').addEventListener('click', () => document.getElementById('modalExpense').classList.remove('open'));
-      document.getElementById('modalExpenseConfirm').addEventListener('click', () => {
-        const amt = parseFloat(document.getElementById('modalExpenseAmount').value);
-        const desc = document.getElementById('modalExpenseDesc').value.trim() || 'Saída';
-        const categoryId = document.getElementById('modalExpenseCategory').value;
-        if (!amt || amt <= 0) { showToast('Valor inválido'); return; }
-        if (expenseBudgetId) {
-          addExpense(expenseBudgetId, amt, desc, categoryId);
-          document.getElementById('modalExpense').classList.remove('open');
-          showToast('Saída registrada!');
-        }
-      });
-
-      function openEditBudgetModal(budgetId) {
-        editingBudgetId = budgetId;
-        const budget = state.budgets.find(b => b.id === budgetId);
-        if (!budget) return;
-        document.getElementById('modalEditBudgetName').value = budget.name;
-        document.getElementById('modalEditBudgetColor').value = budget.color || '#16a34a';
-        document.getElementById('modalEditBudgetSetBalance').value = '';
-        document.getElementById('modalEditBudget').classList.add('open');
-      }
-      document.getElementById('modalEditBudgetCancel').addEventListener('click', () => {
-        document.getElementById('modalEditBudget').classList.remove('open'); editingBudgetId = null;
-      });
-      document.getElementById('modalEditBudgetDelete').addEventListener('click', () => {
-        if (editingBudgetId && confirm('Tem certeza que deseja excluir este orçamento?')) {
-          deleteBudget(editingBudgetId);
-          document.getElementById('modalEditBudget').classList.remove('open');
-          editingBudgetId = null;
-          showToast('Orçamento excluído!');
-        }
-      });
-      document.getElementById('modalEditBudgetConfirm').addEventListener('click', () => {
-        if (!editingBudgetId) return;
-        const budget = state.budgets.find(b => b.id === editingBudgetId);
-        if (!budget) return;
-        const newName = document.getElementById('modalEditBudgetName').value.trim();
-        const newColor = document.getElementById('modalEditBudgetColor').value.trim();
-        const setBalance = parseFloat(document.getElementById('modalEditBudgetSetBalance').value);
-        if (newName) budget.name = newName;
-        if (newColor) budget.color = newColor;
-        if (!isNaN(setBalance) && setBalance >= 0) budget.currentBalance = setBalance;
-        document.getElementById('modalEditBudget').classList.remove('open');
-        editingBudgetId = null;
-        renderAll();
-        showToast('Orçamento atualizado.');
-      });
-
-      function openEditReserveModal(reserveId) {
-        editingReserveId = reserveId;
-        const r = state.reserves.find(x => x.id === reserveId);
-        if (!r) return;
-        document.getElementById('editReserveName').value = r.name;
-        document.getElementById('editReserveBalance').value = r.currentBalance;
-        document.getElementById('editReserveColor').value = r.color || '#7c3aed';
-        document.getElementById('modalEditReserve').classList.add('open');
-      }
-      document.getElementById('editReserveCancel').addEventListener('click', () => {
-        document.getElementById('modalEditReserve').classList.remove('open'); editingReserveId = null;
-      });
-      document.getElementById('editReserveConfirm').addEventListener('click', () => {
-        const r = state.reserves.find(x => x.id === editingReserveId);
-        if (!r) return;
-        const name = document.getElementById('editReserveName').value.trim();
-        const bal = parseFloat(document.getElementById('editReserveBalance').value);
-        const color = document.getElementById('editReserveColor').value;
-        if (name) r.name = name;
-        if (!isNaN(bal) && bal >= 0) r.currentBalance = bal;
-        if (color) r.color = color;
-        document.getElementById('modalEditReserve').classList.remove('open');
-        editingReserveId = null;
-        renderAll();
-        showToast('Reserva atualizada.');
-      });
-      document.getElementById('editReserveDelete').addEventListener('click', () => {
-        const r = state.reserves.find(x => x.id === editingReserveId);
-        if (!r) return;
-        if (confirm(`Excluir a reserva "${r.name}"?`)) {
-          state.reserves = state.reserves.filter(x => x.id !== r.id);
-          document.getElementById('modalEditReserve').classList.remove('open');
-          editingReserveId = null;
-          renderAll();
-          showToast('Reserva excluída.');
-        }
-      });
-
-      function openRescueModal(budgetId) {
-        populateRescueSelects();
-        if (budgetId) document.getElementById('rescueBudgetSelect').value = budgetId;
-        document.getElementById('rescueAmount').value = '';
-        document.getElementById('modalRescue').classList.add('open');
-      }
-      document.getElementById('modalRescueCancel').addEventListener('click', () => document.getElementById('modalRescue').classList.remove('open'));
-      document.getElementById('modalRescueConfirm').addEventListener('click', () => {
-        const reserveId = document.getElementById('rescueReserveSelect').value;
-        const budgetId = document.getElementById('rescueBudgetSelect').value;
-        const amount = parseFloat(document.getElementById('rescueAmount').value);
-        if (!reserveId) { showToast('Selecione uma reserva'); return; }
-        if (!budgetId) { showToast('Selecione um orçamento'); return; }
-        if (!amount || amount <= 0) { showToast('Valor inválido'); return; }
-        const reserve = state.reserves.find(r => r.id === reserveId);
-        const budget = state.budgets.find(b => b.id === budgetId);
-        if (!reserve || !budget) { showToast('Não encontrado'); return; }
-        if (reserve.currentBalance < amount) { showToast('Saldo insuficiente na reserva'); return; }
-        reserve.currentBalance -= amount;
-        budget.currentBalance += amount;
-        state.transactions.push({
-          id: generateId(), amount, date: new Date().toISOString(),
-          type: 'RESERVE_RESCUE', description: `Resgate da ${reserve.name} para ${budget.name}`,
-          fromId: reserveId, toId: budgetId,
-        });
-        document.getElementById('modalRescue').classList.remove('open');
-        renderAll();
-        showToast(`Resgate de ${formatCurrency(amount)} realizado!`);
-      });
-
-      function openTransferModal(fromId) {
-        populateTransferSelects();
-        document.getElementById('transferFromSelect').value = fromId || '';
-        document.getElementById('transferToSelect').value = '';
-        document.getElementById('transferAmount').value = '';
-        document.getElementById('modalTransfer').classList.add('open');
-      }
-      document.getElementById('modalTransferCancel').addEventListener('click', () => document.getElementById('modalTransfer').classList.remove('open'));
-      document.getElementById('modalTransferConfirm').addEventListener('click', () => {
-        const from = document.getElementById('transferFromSelect').value;
-        const to = document.getElementById('transferToSelect').value;
-        const amt = parseFloat(document.getElementById('transferAmount').value);
-        if (!from || !to || from === to) { showToast('Selecione orçamentos diferentes'); return; }
-        if (!amt || amt <= 0) { showToast('Valor inválido'); return; }
-        transferBudget(from, to, amt);
-        document.getElementById('modalTransfer').classList.remove('open');
-        showToast('Transferência realizada!');
-      });
-
-      document.getElementById('editTxCancel').addEventListener('click', () => {
-        const modal = document.getElementById('modalEditTx');
-        modal.classList.remove('open', 'top-modal');
-        editingTxId = null;
-      });
-      document.getElementById('editTxConfirm').addEventListener('click', saveEditTx);
-
-      document.getElementById('confirmEntryBtn').addEventListener('click', () => {
-        const amt = parseFloat(document.getElementById('entryAmount').value);
-        const desc = document.getElementById('entryDesc').value.trim() || 'Entrada';
-        const categoryId = document.getElementById('entryCategorySelect').value;
-        if (!amt || amt <= 0) { showToast('Valor inválido'); return; }
-        state.transactions.push({
-          id: generateId(), amount: amt, date: new Date().toISOString(),
-          type: 'ENTRY', description: desc, categoryId: categoryId || undefined,
-        });
-        state.entryPool = (state.entryPool || 0) + amt;
-        document.getElementById('entryAmount').value = '';
-        document.getElementById('entryDesc').value = '';
-        document.getElementById('entryCategorySelect').value = '';
-        renderAll();
-        showToast(`Entrada de ${formatCurrency(amt)} registrada!`);
-      });
-
-      document.getElementById('confirmAllocBtn').addEventListener('click', () => {
-        const amt = parseFloat(document.getElementById('allocAmount').value);
-        const target = document.getElementById('allocTargetSelect').value;
-        if (!amt || amt <= 0) { showToast('Valor inválido'); return; }
-        if (!target) { showToast('Selecione um destino'); return; }
-        if (state.entryPool < amt) { showToast('Saldo disponível insuficiente'); return; }
-        const parts = target.split('-');
-        const type = parts[0];
-        const id = parts.slice(1).join('-');
-        if (type === 'budget') {
-          const budget = state.budgets.find(b => b.id === id);
-          if (!budget) { showToast('Orçamento não encontrado'); return; }
-          state.entryPool -= amt;
-          budget.currentBalance = (budget.currentBalance || 0) + amt;
-          state.transactions.push({
-            id: generateId(), amount: amt, date: new Date().toISOString(),
-            type: 'ALLOCATION', description: `Alocação para ${budget.name}`,
-            toId: budget.id, budgetName: budget.name,
-          });
-          showToast(`${formatCurrency(amt)} alocado para ${budget.name}`);
-        } else if (type === 'reserve') {
-          const reserve = state.reserves.find(r => r.id === id);
-          if (!reserve) { showToast('Reserva não encontrada'); return; }
-          state.entryPool -= amt;
-          reserve.currentBalance = (reserve.currentBalance || 0) + amt;
-          state.transactions.push({
-            id: generateId(), amount: amt, date: new Date().toISOString(),
-            type: 'ALLOCATION', description: `Alocação para ${reserve.name}`,
-            toId: reserve.id, budgetName: reserve.name,
-          });
-          showToast(`${formatCurrency(amt)} alocado para ${reserve.name}`);
-        }
-        document.getElementById('allocAmount').value = '';
-        document.getElementById('allocTargetSelect').value = '';
-        renderAll();
-      });
-
-      document.querySelectorAll('#mesAddTipoToggle button').forEach(btn => {
-        btn.addEventListener('click', () => {
-          mesAddTipo = btn.dataset.tipo;
-          document.querySelectorAll('#mesAddTipoToggle button').forEach(b => {
-            b.classList.toggle('active', b === btn);
-          });
-          atualizarCategoriasMesAdd();
-        });
-      });
-
-      document.getElementById('mesAddBtn').addEventListener('click', () => {
-        const amt = parseFloat(document.getElementById('mesAddAmount').value);
-        const dataStr = document.getElementById('mesAddDate').value;
-        const desc = document.getElementById('mesAddDesc').value.trim() || (mesAddTipo === 'ENTRY' ? 'Ajuste de entrada' : 'Ajuste de saída');
-        const catId = document.getElementById('mesAddCategory').value;
-
-        if (!amt || amt <= 0) { showToast('Valor inválido'); return; }
-        if (!dataStr) { showToast('Informe a data'); return; }
-
-        const d = new Date(dataStr + 'T12:00:00');
-        if (getFinancialCycle(d) !== selectedMonth) {
-          showToast('A data precisa pertencer ao ciclo ' + formatMonthLabel(selectedMonth) + '.');
-          return;
-        }
-
-        state.transactions.push({
-          id: generateId(),
-          amount: amt,
-          date: d.toISOString(),
-          type: mesAddTipo,
-          description: desc,
-          categoryId: catId || undefined,
-          historicalAdjustment: true,
-          budgetName: 'Ajuste histórico'
-        });
-
-        document.getElementById('mesAddAmount').value = '';
-        document.getElementById('mesAddDesc').value = '';
-        document.getElementById('mesAddCategory').value = '';
-
-        saveState();
-        renderMesEditList();
-        renderAllCharts();
-        renderHistory();
-        renderReports();
-        if (isVisible(document.getElementById('tabReports'))) {
-          renderSelectedMonthReport();
-        }
-        showToast('Ajuste histórico adicionado!');
-      });
-
-      document.getElementById('settingsCycleSave').addEventListener('click', () => {
-        const d = parseInt(document.getElementById('settingsCycleDay').value);
-        if (d < 1 || d > 28) { showToast('Dia entre 1 e 28'); return; }
-        state.cycleStartDay = d;
-        renderAll();
-        showToast('Dia do ciclo atualizado!');
-      });
-      document.getElementById('settingsBudgetSave').addEventListener('click', () => {
-        const name = document.getElementById('settingsBudgetName').value.trim();
-        const color = document.getElementById('settingsBudgetColor').value.trim() || '#16a34a';
-        if (!name) { showToast('Nome obrigatório'); return; }
-        state.budgets.push({
-          id: 'budget-' + generateId(), name, type: 'CUSTOM',
-          targetAmount: 0, currentBalance: 0, color,
-          goal: { enabled: false, targetAmount: 0, startCycle: '', endCycle: '' }
-        });
-        document.getElementById('settingsBudgetName').value = '';
-        renderAll();
-        showToast('Orçamento criado!');
-      });
-      document.getElementById('settingsReserveSave').addEventListener('click', () => {
-        const name = document.getElementById('settingsReserveName').value.trim();
-        const color = document.getElementById('settingsReserveColor').value.trim() || '#7c3aed';
-        if (!name) { showToast('Nome obrigatório'); return; }
-        state.reserves.push({
-          id: 'reserve-' + generateId(), name, currentBalance: 0, color,
-          goal: { enabled: false, targetAmount: 0, startCycle: '', endCycle: '' }
-        });
-        document.getElementById('settingsReserveName').value = '';
-        renderAll();
-        showToast('Reserva criada!');
-      });
-      document.getElementById('settingsCatSave').addEventListener('click', () => {
-        const name = document.getElementById('settingsCatName').value.trim();
-        const type = document.getElementById('settingsCatType').value;
-        if (!name) { showToast('Digite o nome da categoria'); return; }
-        const colors = {
-          ENTRY: ['#15803d', '#16a34a', '#0d9488', '#14b8a6', '#22c55e'],
-          EXPENSE: ['#ea580c', '#dc2626', '#f97316', '#b45309', '#db2777']
-        };
-        const palette = colors[type] || colors.EXPENSE;
-        const color = palette[Math.floor(Math.random() * palette.length)];
-        state.categories.push({ id: 'cat-' + generateId(), name, type, color });
-        document.getElementById('settingsCatName').value = '';
-        renderAll();
-        showToast('Categoria criada!');
-      });
-
-      document.querySelectorAll('#tabHistory .filter-group button').forEach(btn => {
-        btn.addEventListener('click', () => {
-          document.querySelectorAll('#tabHistory .filter-group button').forEach(b => b.classList.remove('active-filter'));
-          btn.classList.add('active-filter');
-          renderHistory();
-        });
-      });
-
-      document.getElementById('monthFilter').addEventListener('change', (e) => {
-        selectedMonth = e.target.value;
-        renderSelectedMonthReport();
-      });
-
-      document.getElementById('copyJsonBtn').addEventListener('click', () => {
-        const json = JSON.stringify(state, null, 2);
-        document.getElementById('jsonTextarea').value = json;
-        navigator.clipboard?.writeText(json).then(() => showToast('JSON copiado!')).catch(() => {
-          document.getElementById('jsonTextarea').select();
-          document.execCommand('copy');
-          showToast('JSON copiado!');
-        });
-      });
-
-      function isValidState(data) {
-        return data && typeof data === 'object'
-          && Array.isArray(data.transactions)
-          && Array.isArray(data.budgets)
-          && Array.isArray(data.reserves)
-          && (data.categories === undefined || Array.isArray(data.categories));
-      }
-
-      function applyImportedState(data) {
-        if (!isValidState(data)) { showToast('JSON inválido: campos obrigatórios ausentes.'); return false; }
-        state = migrateState(data);
-        renderAll();
-        showToast('Dados importados com sucesso!');
-        return true;
-      }
-
-      document.getElementById('importJsonBtn').addEventListener('click', () => document.getElementById('fileInput').click());
-      document.getElementById('fileInput').addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = (ev) => {
-          try {
-            const data = JSON.parse(ev.target.result);
-            applyImportedState(data);
-          } catch (err) { showToast('Erro ao ler JSON: ' + err.message); }
-        };
-        reader.readAsText(file);
-        e.target.value = '';
-      });
-      document.getElementById('applyJsonBtn').addEventListener('click', () => {
-        try {
-          const data = JSON.parse(document.getElementById('jsonTextarea').value);
-          applyImportedState(data);
-        } catch (err) { showToast('Erro no JSON: ' + err.message); }
-      });
-
-      document.getElementById('menuToggle').addEventListener('click', () => document.getElementById('menuOverlay').classList.add('open'));
-      document.getElementById('menuClose').addEventListener('click', () => document.getElementById('menuOverlay').classList.remove('open'));
-      document.querySelectorAll('.menu-panel button[data-tab]').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const tabId = btn.dataset.tab;
-          document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-          document.getElementById(tabId).classList.add('active');
-          document.getElementById('menuOverlay').classList.remove('open');
-          document.querySelectorAll('.menu-panel button[data-tab]').forEach(b => b.classList.remove('active'));
-          btn.classList.add('active');
-          if (tabId === 'tabHistory') renderHistory();
-          if (tabId === 'tabReserve') { renderReserve(); }
-          if (tabId === 'tabEntry') { updateHomeIndicators(); populateAllocSelects(); renderCategorySelects(); }
-          if (tabId === 'tabReports') {
-            renderMonthFilter();
-            setTimeout(() => {
-              renderSelectedMonthReport();
-              renderAllCharts();
-            }, 60);
-          }
-          if (tabId === 'tabSettings') renderSettings();
-          if (tabId === 'tabHome') {
-            setTimeout(() => {
-              renderAllCharts();
-              requestAnimationFrame(() => {
-                const sw = document.getElementById('homeChartScroll');
-                if (sw) sw.scrollLeft = sw.scrollWidth;
-              });
-            }, 60);
-          }
-        });
-      });
-
-      document.querySelectorAll('.modal-mask').forEach(m => {
-        m.addEventListener('click', (e) => { if (e.target === m) m.classList.remove('open', 'top-modal'); });
-      });
-
-      function addExpense(budgetId, amount, description, categoryId) {
-        if (!budgetId || amount <= 0) return;
-        const budget = state.budgets.find(b => b.id === budgetId);
-        if (!budget) return;
-        if (budget.currentBalance < amount) { showToast('Saldo insuficiente no orçamento.'); return; }
-        budget.currentBalance -= amount;
-        state.transactions.push({
-          id: generateId(), amount, date: new Date().toISOString(),
-          type: 'EXPENSE', description: description || 'Saída',
-          fromId: budgetId, budgetName: budget.name,
-          categoryId: categoryId || undefined,
-        });
-        renderAll();
-      }
-
-      function deleteBudget(budgetId) {
-        const budget = state.budgets.find(b => b.id === budgetId);
-        if (!budget) return;
-        const nomeBudget = budget.name;
-        state.transactions.forEach(t => {
-          if ((t.type === 'ENTRY' || t.type === 'EXPENSE') && (t.fromId === budgetId || t.toId === budgetId)) {
-            if (!t.budgetName) t.budgetName = nomeBudget;
-            if (t.fromId === budgetId) t.fromId = undefined;
-            if (t.toId === budgetId) t.toId = undefined;
-          }
-        });
-        state.transactions = state.transactions.filter(t => {
-          if (t.type === 'ALLOCATION' || t.type === 'RESERVE_RESCUE') {
-            return !(t.fromId === budgetId || t.toId === budgetId);
-          }
-          return true;
-        });
-        state.budgets = state.budgets.filter(b => b.id !== budgetId);
-        renderAll();
-      }
-
-      function transferBudget(fromId, toId, amount) {
-        if (!fromId || !toId || fromId === toId || amount <= 0) return;
-        const from = state.budgets.find(b => b.id === fromId);
-        const to = state.budgets.find(b => b.id === toId);
-        if (!from || !to) return;
-        if (from.currentBalance < amount) { showToast('Saldo insuficiente no orçamento de origem.'); return; }
-        from.currentBalance -= amount;
-        to.currentBalance += amount;
-        state.transactions.push({
-          id: generateId(), amount, date: new Date().toISOString(),
-          type: 'ALLOCATION', description: `Transferência de ${from.name} para ${to.name}`,
-          fromId, toId, budgetName: `${from.name} → ${to.name}`,
-        });
-        renderAll();
-      }
-
-      function updateJsonTextarea() {
-        const ta = document.getElementById('jsonTextarea');
-        if (ta && document.activeElement !== ta) {
-          ta.value = JSON.stringify(state, null, 2);
-        }
-      }
-
-      function init() {
-        if (!loadState()) {
-          state = {
-            schemaVersion: SCHEMA_VERSION,
-            entryPool: 0,
-            transactions: [],
-            budgets: [
-              { id: "budget-fixed", name: "Contas Fixas", type: "FIXED", targetAmount: 0, currentBalance: 0, color: "#16a34a",
-                goal: { enabled: false, targetAmount: 0, startCycle: '', endCycle: '' } },
-              { id: "budget-monthly", name: "Gastos Mensais", type: "MONTHLY", targetAmount: 0, currentBalance: 0, color: "#0d9488",
-                goal: { enabled: false, targetAmount: 0, startCycle: '', endCycle: '' } }
-            ],
-            reserves: [{
-              id: "reserve-emergency", name: "Reserva de Emergência", currentBalance: 0,
-              color: "#7c3aed",
-              goal: { enabled: false, targetAmount: 0, startCycle: '', endCycle: '' }
-            }],
-            categories: [
-              { id: "cat-salario", name: "Salário", type: "ENTRY", color: "#15803d" },
-              { id: "cat-extra", name: "Renda Extra", type: "ENTRY", color: "#16a34a" },
-              { id: "cat-alimentacao", name: "Alimentação", type: "EXPENSE", color: "#ea580c" },
-              { id: "cat-transporte", name: "Transporte", type: "EXPENSE", color: "#b45309" },
-              { id: "cat-moradia", name: "Moradia", type: "EXPENSE", color: "#dc2626" },
-              { id: "cat-lazer", name: "Lazer", type: "EXPENSE", color: "#db2777" }
-            ],
-            cycleStartDay: 6
-          };
-        }
-        renderAll();
-        setTimeout(() => {
-          populateTransferSelects();
-          populateAllocSelects();
-          populateRescueSelects();
-          renderCategorySelects();
-          renderMonthFilter();
-          renderSelectedMonthReport();
-          renderAllCharts();
-        }, 100);
-      }
-
-      init();
-    })();
-  </script>
+  <script type="module" src="src/js/main.js"></script>
 </body>
 
 </html>
