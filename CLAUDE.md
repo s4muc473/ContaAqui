@@ -162,8 +162,12 @@ offline. A cópia local **não** é apagada, serve de rede de segurança.
 ### Cuidados na Vercel
 
 - O handler é `module.exports = app` em `app.js`, com `builds`/`routes` no `vercel.json`.
-- `includeFiles` precisa listar `index.html`, `src/**` e os ícones, senão eles não entram
-  no bundle da função e o app não carrega.
+- Os estáticos **não** são servidos pela função: `index.html`, `src/**`, `sw.js`,
+  `manifest.webmanifest` e os ícones são builds `@vercel/static`, resolvidos pelo
+  `handle: filesystem` antes do fallback. Tentar entregá-los pelo Express (via
+  `includeFiles`) já quebrou a produção uma vez: os módulos não entravam no bundle, o
+  navegador recebia HTML onde esperava JavaScript e a tela ficava branca. Arquivo público
+  novo precisa entrar nos `builds`.
 - A conexão do Mongo fica em cache no `global` porque a mesma instância atende várias
   requisições; abrir um pool por invocação estoura o limite de conexões do Atlas.
 - O Express **não** serve o diretório inteiro: só `/src` e uma lista fixa de ícones; todo
@@ -176,6 +180,21 @@ delega; `render.js` só desenha. Actions validam, mostram toast em erro e retorn
 Há import circular entre `render.js`, `actions.js` e `modals.js`. É intencional e seguro
 (só há chamadas em tempo de execução, nunca na avaliação do módulo). Não adicione código
 de topo de módulo que chame funções importadas.
+
+## PWA
+
+`manifest.webmanifest` + `sw.js` na raiz tornam o app instalável. O painel "Aplicativo",
+na aba Dados, chama `instalarApp()` (`src/js/pwa.js`), que dispara o prompt guardado do
+`beforeinstallprompt`. Quando o prompt não existe (iPhone, ou navegador que não oferece),
+o painel mostra o caminho manual e **esconde** o botão, em vez de deixar um botão inerte.
+
+Regra do service worker: **`/api` nunca é cacheado**. São dados financeiros, e servir uma
+resposta velha ali é pior do que falhar. Navegação é rede-primeiro (para pegar deploy novo
+na hora) com o cache como rede de segurança offline; o resto é cache-primeiro com
+revalidação ao fundo, então o shell inteiro fica disponível sem conexão.
+
+Ao mudar a estratégia de cache, suba o `VERSAO` em `sw.js` — o `activate` apaga os caches
+que não começam com a versão atual.
 
 ## Telas
 

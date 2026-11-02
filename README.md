@@ -106,6 +106,8 @@ categoria.
 - **Baixar backup**: salva um arquivo `.json` com tudo
 - **Importar arquivo**: restaura de um backup
 - Também dá para ver e colar o JSON na mão
+- **Baixar app**: instala o MyCoin no celular, para abrir da tela inicial sem a barra
+  do navegador
 
 ### 6. ⚙️ Configurações
 - **Perfil**: seu nome e a **cor principal** do app (qualquer cor). O avatar mostra a
