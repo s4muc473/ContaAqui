@@ -1,8 +1,14 @@
 // Service worker do MyCoin.
-// Regra que não pode ser quebrada: /api nunca é cacheado. São dados financeiros,
-// e servir uma resposta velha aqui seria pior do que falhar.
+//
+// Duas regras que não podem ser quebradas:
+// 1. /api nunca é cacheado. São dados financeiros, e servir uma resposta velha
+//    ali seria pior do que falhar.
+// 2. O código do app é sempre buscado na rede primeiro. Servir JS do cache junto
+//    com um HTML novo mistura duas versões e quebra a tela de formas difíceis de
+//    diagnosticar. O cache do app existe como rede de segurança offline, não
+//    como fonte preferencial.
 
-const VERSAO = 'mycoin-v1';
+const VERSAO = 'mycoin-v2';
 const CACHE_APP = `${VERSAO}-app`;
 const PAGINA = '/index.html';
 
@@ -24,46 +30,42 @@ self.addEventListener('activate', evento => {
   );
 });
 
-self.addEventListener('message', evento => {
-  if (evento.data === 'pular-espera') self.skipWaiting();
-});
-
 self.addEventListener('fetch', evento => {
   const req = evento.request;
   if (req.method !== 'GET') return;
 
   const url = new URL(req.url);
-  if (url.origin === location.origin && url.pathname.startsWith('/api/')) return;
+  const mesmaOrigem = url.origin === location.origin;
 
-  // Navegação: tenta a rede primeiro, para pegar deploy novo assim que houver.
-  if (req.mode === 'navigate') {
-    evento.respondWith(
-      fetch(req)
-        .then(resposta => {
-          guardar(CACHE_APP, PAGINA, resposta.clone());
-          return resposta;
-        })
-        .catch(async () => (await caches.match(PAGINA)) || Response.error()),
-    );
-    return;
-  }
+  if (mesmaOrigem && url.pathname.startsWith('/api/')) return;
 
-  // Demais recursos (código do app e CDNs): serve do cache e revalida ao fundo.
-  evento.respondWith(
-    caches.match(req).then(emCache => {
-      const daRede = fetch(req)
-        .then(resposta => {
-          if (resposta && (resposta.ok || resposta.type === 'opaque')) {
-            guardar(CACHE_APP, req, resposta.clone());
-          }
-          return resposta;
-        })
-        .catch(() => emCache || Response.error());
-      return emCache || daRede;
-    }),
-  );
+  // CDNs versionam na própria URL, então o conteúdo nunca muda: cache serve.
+  evento.respondWith(mesmaOrigem ? redePrimeiro(req) : cachePrimeiro(req));
 });
 
-function guardar(nomeCache, chave, resposta) {
-  caches.open(nomeCache).then(cache => cache.put(chave, resposta)).catch(() => {});
+async function redePrimeiro(req) {
+  const chave = req.mode === 'navigate' ? PAGINA : req;
+  try {
+    const resposta = await fetch(req);
+    if (resposta.ok) guardar(chave, resposta.clone());
+    return resposta;
+  } catch (e) {
+    return (await caches.match(chave)) || Response.error();
+  }
+}
+
+async function cachePrimeiro(req) {
+  const emCache = await caches.match(req);
+  if (emCache) return emCache;
+  try {
+    const resposta = await fetch(req);
+    if (resposta.ok || resposta.type === 'opaque') guardar(req, resposta.clone());
+    return resposta;
+  } catch (e) {
+    return Response.error();
+  }
+}
+
+function guardar(chave, resposta) {
+  caches.open(CACHE_APP).then(cache => cache.put(chave, resposta)).catch(() => {});
 }
