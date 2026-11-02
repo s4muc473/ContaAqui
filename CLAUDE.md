@@ -144,9 +144,16 @@ contra 16 MB por documento e 512 MB do plano gratuito). O servidor valida só a 
 mínima (`transactions` e `reserves` como listas) e o tamanho; ele não conhece as regras
 de negócio, que continuam no front.
 
-Hoje só existe um usuário: `/api/auth/setup` funciona apenas enquanto a coleção `users`
-estiver vazia. Para abrir para mais usuários, basta liberar essa rota — o resto já é por
-`userId`.
+O cadastro é aberto: `/api/auth/register` cria conta para qualquer um, e a unicidade do
+`username` é garantida pelo índice único — checar antes e inserir depois abriria corrida
+entre dois cadastros simultâneos. Conta nova nasce sem documento em `states`, então o
+front cai no `defaultState()`.
+
+**Nunca aproveite o localStorage para preencher uma conta recém-criada.** Existiu uma
+importação automática assim, para migrar quem usava o app offline, e ela virou vazamento
+quando o app passou a ser multiusuário: num aparelho compartilhado, a conta nova herdava
+os dados de quem usou antes. Quem precisa trazer dados antigos usa a importação de
+arquivo na aba Dados, e o logout chama `limparDadosLocais()` para não deixar resíduo.
 
 ### Gravação e concorrência
 
@@ -188,10 +195,14 @@ na aba Dados, chama `instalarApp()` (`src/js/pwa.js`), que dispara o prompt guar
 `beforeinstallprompt`. Quando o prompt não existe (iPhone, ou navegador que não oferece),
 o painel mostra o caminho manual e **esconde** o botão, em vez de deixar um botão inerte.
 
-Regra do service worker: **`/api` nunca é cacheado**. São dados financeiros, e servir uma
-resposta velha ali é pior do que falhar. Navegação é rede-primeiro (para pegar deploy novo
-na hora) com o cache como rede de segurança offline; o resto é cache-primeiro com
-revalidação ao fundo, então o shell inteiro fica disponível sem conexão.
+Duas regras do service worker:
+
+1. **`/api` nunca é cacheado.** São dados financeiros, e servir uma resposta velha ali é
+   pior do que falhar.
+2. **Tudo da própria origem é rede-primeiro**, com o cache só como rede de segurança
+   offline. Cache-primeiro para o código do app já quebrou a produção: depois de um
+   deploy, o primeiro acesso rodava o JavaScript antigo junto com o HTML novo, e só um
+   segundo recarregamento corrigia. CDN é a exceção — versiona na URL, então vai de cache.
 
 Ao mudar a estratégia de cache, suba o `VERSAO` em `sw.js` — o `activate` apaga os caches
 que não começam com a versão atual.
