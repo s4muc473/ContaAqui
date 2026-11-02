@@ -1,4 +1,4 @@
-import { state, gravarNoServidor } from './state.js';
+import { state, gravarNoServidor, limparDadosLocais } from './state.js';
 import { api } from './api.js';
 import { instalarApp } from './pwa.js';
 import { $, showToast } from './utils.js';
@@ -196,6 +196,7 @@ function wireSettings() {
     if (!confirm('Sair da conta neste aparelho?')) return;
     await gravarNoServidor();
     try { await api.logout(); } catch (e) { /* segue para a tela de login mesmo assim */ }
+    limparDadosLocais();
     ui.usuario = null;
     location.reload();
   });

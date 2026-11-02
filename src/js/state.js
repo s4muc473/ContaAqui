@@ -136,11 +136,12 @@ function avisar(situacao, detalhe) {
   aoMudarSync?.(situacao, detalhe);
 }
 
-function lerLocalCru() {
-  const salvo = localStorage.getItem(STORAGE_KEY);
-  if (!salvo) return null;
-  try { return JSON.parse(salvo); }
-  catch (e) { return null; }
+// Limpa o que o app guardou neste navegador, para não deixar resíduo de uma
+// conta visível para a próxima que entrar no mesmo aparelho.
+export function limparDadosLocais() {
+  Object.keys(localStorage)
+    .filter(chave => chave.startsWith('financeiro_data') && !chave.includes('_demo'))
+    .forEach(chave => localStorage.removeItem(chave));
 }
 
 function gravarLocal() {
@@ -220,14 +221,10 @@ export async function loadState() {
     return true;
   }
 
-  // Primeira carga com o servidor vazio: sobe o que já existia neste aparelho.
-  // A cópia local continua intacta, como rede de segurança.
-  const local = lerLocalCru();
-  if (local && isValidState(local)) {
-    state = migrateState(local);
-    await gravarNoServidor();
-    return true;
-  }
+  // Servidor vazio significa conta nova: começa zerada, e pronto.
+  // Não aproveitamos o localStorage daqui — num app multiusuário o aparelho
+  // pode ter sobra de outra conta, e isso jogaria os dados de um no outro.
+  // Para trazer dados antigos existe a importação de arquivo, na aba Dados.
   return false;
 }
 

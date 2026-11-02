@@ -1,4 +1,5 @@
 const express = require('express');
+const { ObjectId } = require('mongodb');
 const { users } = require('../db');
 const {
   hashSenha,
@@ -33,29 +34,24 @@ function validarCredenciais(usuario, senha) {
 
 router.get('/status', async (req, res, next) => {
   try {
-    const col = await users();
-    const total = await col.countDocuments({}, { limit: 1 });
     const id = lerToken(req);
     let usuario = null;
 
-    if (id) {
-      const { ObjectId } = require('mongodb');
-      if (ObjectId.isValid(id)) {
-        const doc = await col.findOne({ _id: new ObjectId(id) }, { projection: { username: 1 } });
-        if (doc) usuario = { id: String(doc._id), username: doc.username };
-      }
+    if (id && ObjectId.isValid(id)) {
+      const col = await users();
+      const doc = await col.findOne({ _id: new ObjectId(id) }, { projection: { username: 1 } });
+      if (doc) usuario = { id: String(doc._id), username: doc.username };
     }
 
-    res.json({ precisaSetup: total === 0, autenticado: !!usuario, usuario });
+    res.json({ autenticado: !!usuario, usuario });
   } catch (e) { next(e); }
 });
 
-router.post('/setup', async (req, res, next) => {
+router.post('/register', async (req, res, next) => {
   try {
-    const col = await users();
-    const total = await col.countDocuments({}, { limit: 1 });
-    if (total > 0) {
-      return res.status(409).json({ erro: 'Já existe um usuário. Use a tela de login.' });
+    const chave = `registro:${req.ip}`;
+    if (excedeuTentativas(chave)) {
+      return res.status(429).json({ erro: 'Muitas contas criadas daqui. Tente de novo mais tarde.' });
     }
 
     const usuario = normalizarUsuario(req.body?.username);
@@ -63,15 +59,28 @@ router.post('/setup', async (req, res, next) => {
     const erro = validarCredenciais(usuario, senha);
     if (erro) return res.status(400).json({ erro });
 
+    const col = await users();
     const agora = new Date();
-    const doc = {
-      username: usuario,
-      passwordHash: await hashSenha(senha),
-      createdAt: agora,
-      updatedAt: agora,
-    };
-    const { insertedId } = await col.insertOne(doc);
 
+    let insertedId;
+    try {
+      // O índice único em username é quem garante a unicidade de verdade:
+      // checar antes e inserir depois abriria corrida entre dois cadastros.
+      ({ insertedId } = await col.insertOne({
+        username: usuario,
+        passwordHash: await hashSenha(senha),
+        createdAt: agora,
+        updatedAt: agora,
+      }));
+    } catch (e) {
+      if (e.code === 11000) {
+        registrarTentativa(chave);
+        return res.status(409).json({ erro: 'Esse usuário já existe. Escolha outro ou faça login.' });
+      }
+      throw e;
+    }
+
+    registrarTentativa(chave);
     darToken(res, { _id: insertedId });
     res.status(201).json({ usuario: { id: String(insertedId), username: usuario } });
   } catch (e) { next(e); }

@@ -27,7 +27,7 @@ async function pedir(metodo, url, corpo) {
 
 export const api = {
   status: () => pedir('GET', '/api/auth/status'),
-  setup: (username, password) => pedir('POST', '/api/auth/setup', { username, password }),
+  registrar: (username, password) => pedir('POST', '/api/auth/register', { username, password }),
   login: (username, password) => pedir('POST', '/api/auth/login', { username, password }),
   logout: () => pedir('POST', '/api/auth/logout'),
   trocarSenha: (currentPassword, newPassword) => pedir('POST', '/api/auth/password', { currentPassword, newPassword }),

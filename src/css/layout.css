@@ -105,3 +105,12 @@
 }
 .sync[hidden]{display:none}
 .sync.erro{background:var(--danger-soft);color:var(--danger)}
+
+.auth-troca{
+  margin-top:18px;text-align:center;font-size:13px;color:var(--muted);
+  display:flex;justify-content:center;align-items:center;gap:6px;flex-wrap:wrap;
+}
+.auth-troca button{
+  color:var(--accent);font-weight:600;font-size:13px;
+  text-decoration:underline;text-underline-offset:3px;padding:6px 2px;
+}

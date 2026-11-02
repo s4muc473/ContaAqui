@@ -52,7 +52,7 @@ function ligarIndicadorSync() {
     }
     if (situacao === 'deslogado') {
       el.hidden = true;
-      mostrarLogin(false, 'Sua sessão expirou. Entre de novo.');
+      mostrarLogin({ mensagem: 'Sua sessão expirou. Entre de novo.' });
     }
   });
 
@@ -94,9 +94,9 @@ async function init() {
     const status = await api.status();
     ui.usuario = status.usuario;
     if (status.autenticado) await abrirApp();
-    else mostrarLogin(status.precisaSetup);
+    else mostrarLogin();
   } catch (e) {
-    mostrarLogin(false, e.message);
+    mostrarLogin({ mensagem: e.message });
   }
 }
 

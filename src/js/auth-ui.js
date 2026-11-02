@@ -2,28 +2,32 @@ import { $ } from './utils.js';
 import { api } from './api.js';
 import { ui } from './ui-state.js';
 
-let modoSetup = false;
+let modoCriar = false;
 let aoEntrar = null;
 
 export function wireAuthForm(callback) {
   aoEntrar = callback;
   $('authForm').addEventListener('submit', enviar);
+  $('authTrocaBtn').addEventListener('click', () => mostrarLogin({ criar: !modoCriar }));
 }
 
-export function mostrarLogin(precisaSetup, mensagem) {
-  modoSetup = !!precisaSetup;
+export function mostrarLogin({ criar = false, mensagem = '' } = {}) {
+  modoCriar = criar;
 
-  $('authTitle').textContent = modoSetup ? 'Criar acesso' : 'Entrar';
-  $('authSub').textContent = modoSetup
-    ? 'Defina o usuário e a senha que vão proteger seus dados.'
+  $('authTitle').textContent = criar ? 'Criar conta' : 'Entrar';
+  $('authSub').textContent = criar
+    ? 'Escolha um usuário e uma senha. Sua conta começa zerada e é só sua.'
     : 'Acesse com seu usuário e senha.';
-  $('authSubmit').textContent = modoSetup ? 'Criar acesso' : 'Entrar';
-  $('authConfirmWrap').hidden = !modoSetup;
-  $('authPass').setAttribute('autocomplete', modoSetup ? 'new-password' : 'current-password');
+  $('authSubmit').textContent = criar ? 'Criar conta' : 'Entrar';
+  $('authConfirmWrap').hidden = !criar;
+  $('authPass').setAttribute('autocomplete', criar ? 'new-password' : 'current-password');
+  $('authTrocaTexto').textContent = criar ? 'Já tem conta?' : 'Ainda não tem conta?';
+  $('authTrocaBtn').textContent = criar ? 'Entrar' : 'Criar conta';
+
   $('authPass').value = '';
   $('authPass2').value = '';
-
   mostrarErro(mensagem);
+
   $('app').hidden = true;
   $('authScreen').hidden = false;
   $('authUser').focus();
@@ -42,7 +46,7 @@ async function enviar(evento) {
   const senha = $('authPass').value;
   const botao = $('authSubmit');
 
-  if (modoSetup && senha !== $('authPass2').value) {
+  if (modoCriar && senha !== $('authPass2').value) {
     mostrarErro('As senhas não conferem');
     return;
   }
@@ -50,8 +54,8 @@ async function enviar(evento) {
   botao.disabled = true;
   mostrarErro('');
   try {
-    const resposta = modoSetup
-      ? await api.setup(usuario, senha)
+    const resposta = modoCriar
+      ? await api.registrar(usuario, senha)
       : await api.login(usuario, senha);
 
     ui.usuario = resposta.usuario;
