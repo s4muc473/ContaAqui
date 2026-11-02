@@ -50,13 +50,17 @@ o schema 3 removeu `budgets` e `entryPool`. Fora da conta existem apenas **reser
 
 ```
 state = {
-  schemaVersion: 3,
+  schemaVersion: 4,
   profile: { name, color },          // color vira --accent em runtime
   account: 0,                        // saldo disponível
   transactions: [],
   reserves: [],                      // { id, name, color, currentBalance, goal }
   categories: [],
   cycleStartDay: 6,
+  projecoes: {                       // planejamento, não movimenta saldo
+    ciclos:   { 'AAAA-MM': { entradas, saidas } },
+    reservas: { reserveId: { 'AAAA-MM': { guardar, resgatar } } },
+  },
 }
 ```
 
@@ -144,7 +148,9 @@ contra 16 MB por documento e 512 MB do plano gratuito). O servidor valida só a 
 mínima (`transactions` e `reserves` como listas) e o tamanho; ele não conhece as regras
 de negócio, que continuam no front.
 
-O cadastro é aberto: `/api/auth/register` cria conta para qualquer um, e a unicidade do
+Com `CODIGO_CONVITE` definida, `/api/auth/register` exige o código e o front mostra o
+campo (o `/status` informa `exigeConvite`). Sem a variável, o cadastro fica aberto — é o
+comportamento de quem já está no ar. A unicidade do
 `username` é garantida pelo índice único — checar antes e inserir depois abriria corrida
 entre dois cadastros simultâneos. Conta nova nasce sem documento em `states`, então o
 front cai no `defaultState()`.
@@ -206,6 +212,24 @@ Duas regras do service worker:
 
 Ao mudar a estratégia de cache, suba o `VERSAO` em `sw.js` — o `activate` apaga os caches
 que não começam com a versão atual.
+
+## Projeções
+
+`state.projecoes` guarda planejamento por ciclo: quanto se espera que entre e saia no
+fluxo mensal, e quanto se pretende guardar e resgatar em cada reserva. **Não encosta em
+saldo nenhum** — nem `account`, nem `currentBalance`. É só desenho de linha.
+
+Nos gráficos, **sólido é o que aconteceu e tracejado é o que se planeja**; verde entra,
+vermelho/laranja sai. Ciclo sem dado real recebe `null`, nunca zero: zero desenharia a
+linha caindo ao chão no futuro, como se nada tivesse entrado, quando na verdade ainda não
+aconteceu. As séries saem de `buildFlowSeries()` e `buildReserveFlowSeries()`, que unem
+ciclos reais e projetados.
+
+O editor (`abrirProjecaoFluxo` / `abrirProjecaoReserva`) lista o ciclo atual e os 11
+seguintes, mais qualquer ciclo que já tenha projeção fora dessa janela — assim nada fica
+sem como editar. Linha com todos os valores zerados é removida do mapa.
+
+A meta da reserva continua separada, no botão Meta, e aparece no gráfico de metas.
 
 ## Telas
 

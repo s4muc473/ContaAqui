@@ -41,6 +41,11 @@
       <label class="field-label" for="authPass">Senha</label>
       <input type="password" id="authPass" autocomplete="current-password" required>
 
+      <div id="authConviteWrap" hidden>
+        <label class="field-label" for="authConvite">Código de convite</label>
+        <input type="text" id="authConvite" autocomplete="off" spellcheck="false">
+      </div>
+
       <div id="authConfirmWrap" hidden>
         <label class="field-label" for="authPass2">Confirmar senha</label>
         <input type="password" id="authPass2" autocomplete="new-password">
@@ -114,7 +119,10 @@
       </div>
 
       <div class="chart-container">
-        <div class="chart-title"><i class="fas fa-chart-area"></i> Fluxo mensal</div>
+        <div class="chart-title">
+          <i class="fas fa-chart-area"></i> Fluxo mensal
+          <button class="chart-acao" id="projFluxoBtn"><i class="fas fa-sliders"></i> Projeções</button>
+        </div>
         <div class="chart-box"><canvas id="homeChart"></canvas></div>
       </div>
     </div>
@@ -167,7 +175,10 @@
       </nav>
 
       <div class="chart-container">
-        <div class="chart-title"><i class="fas fa-chart-area"></i> Crescimento vs Resgates</div>
+        <div class="chart-title">
+          <i class="fas fa-chart-area"></i> Crescimento vs Resgates
+          <button class="chart-acao" id="projReservaBtn"><i class="fas fa-sliders"></i> Projeções</button>
+        </div>
         <div class="chart-box"><canvas id="reserveDetailChart"></canvas></div>
       </div>
 
@@ -398,6 +409,18 @@
         <div class="mes-edit-list" id="mesEditList"></div>
         <div class="modal-actions">
           <button id="editMesClose" class="primary">Concluir</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-mask" id="modalProjecao">
+      <div class="modal-box wide">
+        <h3 id="projTitulo">Projeções</h3>
+        <p class="modal-sub" id="projSub"></p>
+        <div class="proj-lista" id="projLista"></div>
+        <div class="modal-actions">
+          <button id="projCancelar">Cancelar</button>
+          <button id="projSalvar" class="primary">Salvar projeções</button>
         </div>
       </div>
     </div>

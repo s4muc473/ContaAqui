@@ -60,6 +60,7 @@ O projeto já vem com `vercel.json` pronto. Na Vercel, configure em
 | `MONGODB_URI` | string completa do Atlas (`mongodb+srv://usuario:senha@cluster.../`) |
 | `JWT_SECRET` | segredo longo e aleatório, 16+ caracteres |
 | `MONGODB_DB` | opcional, padrão `mycoin` |
+| `CODIGO_CONVITE` | opcional: com um valor, só quem tiver o código cria conta |
 
 Gere o segredo com:
 
@@ -81,7 +82,8 @@ Nenhuma credencial fica no repositório: o `.env` está no `.gitignore`.
 - Ações rápidas: **Entrada**, **Saída**, **Guardar** e **Resgatar**
 - **Total guardado** somando todas as reservas
 - Entradas e saídas do ciclo atual
-- Gráfico de **fluxo mensal** (entradas x saídas)
+- Gráfico de **fluxo mensal** (entradas x saídas), com linhas de **projeção** que você
+  edita mês a mês no botão "Projeções"
 
 ### 2. 🕐 Histórico
 Todas as transações, com filtro por tipo. Entradas em verde, saídas em vermelho.

@@ -41,6 +41,9 @@ import {
   fillMesAddCategories,
   addMesAdjustment,
   closeModal,
+  abrirProjecaoFluxo,
+  abrirProjecaoReserva,
+  salvarProjecao,
 } from './modals.js';
 
 const TAB_HOOKS = {
@@ -103,6 +106,7 @@ function wireHome() {
   on('actSave', 'click', () => openMoveModal('save'));
   on('actRescue', 'click', () => openMoveModal('rescue'));
   on('savedRow', 'click', () => showTab('tabReserve'));
+  on('projFluxoBtn', 'click', abrirProjecaoFluxo);
   on('newReserveBtn', 'click', () => openReserveModal(null));
 }
 
@@ -118,6 +122,7 @@ function wireReserveDetail() {
     if (r) openGoalModal(r);
   });
   on('detailEdit', 'click', () => openReserveModal(ui.currentReserveId));
+  on('projReservaBtn', 'click', () => abrirProjecaoReserva(ui.currentReserveId));
 }
 
 function wireModals() {
@@ -140,6 +145,9 @@ function wireModals() {
   on('editGoalEnabled', 'change', e => {
     $('editGoalFields').style.display = e.target.checked ? 'block' : 'none';
   });
+
+  on('projCancelar', 'click', () => closeModal('modalProjecao'));
+  on('projSalvar', 'click', salvarProjecao);
 
   on('editMesClose', 'click', () => {
     closeModal('modalEditMes');

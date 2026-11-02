@@ -5,8 +5,9 @@ import {
   buildMonthlyData,
   buildGoalsAggregateByCycle,
   buildReserveBalanceByCycle,
-  buildReserveCycleSeries,
   buildCategoryTotals,
+  buildFlowSeries,
+  buildReserveFlowSeries,
 } from './selectors.js';
 
 const charts = {};
@@ -93,6 +94,18 @@ function area(color) {
   };
 }
 
+function linha(color) {
+  return {
+    borderColor: color,
+    fill: false,
+    tension: 0.35,
+    borderWidth: 2,
+    pointRadius: 3,
+    pointBackgroundColor: color,
+    pointHoverRadius: 5,
+  };
+}
+
 function dashed(color) {
   return {
     borderColor: color,
@@ -119,20 +132,31 @@ export function renderAllCharts() {
   const data = buildMonthlyData();
   const labels = data.map(d => formatMonthShort(d.name));
 
-  renderFlowChart(data, labels);
+  renderFlowChart();
   renderGoalsChart(data, labels);
   renderGrowthChart(data, labels);
 }
 
-export function renderFlowChart(data = buildMonthlyData(), labels) {
+export function renderFlowChart() {
   const canvas = $('homeChart');
   if (!canvas || !isVisible(canvas.closest('.tab-content'))) return;
-  if (!data.length) { showEmpty(canvas, 'Registre sua primeira entrada para ver o fluxo mensal.'); return; }
 
-  lineChart(canvas, labels || data.map(d => formatMonthShort(d.name)), [
-    { label: 'Entradas', data: data.map(d => d.entradas), ...area('#16a34a') },
-    { label: 'Saídas', data: data.map(d => d.gastos), ...dashed('#dc2626') },
-  ]);
+  const serie = buildFlowSeries();
+  if (!serie.length) { showEmpty(canvas, 'Registre sua primeira entrada para ver o fluxo mensal.'); return; }
+
+  const temProjecao = serie.some(d => d.projEntradas !== null || d.projSaidas !== null);
+  const datasets = [
+    { label: 'Entradas', data: serie.map(d => d.entradas), ...area('#16a34a') },
+    { label: 'Saídas', data: serie.map(d => d.gastos), ...linha('#dc2626') },
+  ];
+  if (temProjecao) {
+    datasets.push(
+      { label: 'Entradas previstas', data: serie.map(d => d.projEntradas), ...dashed('#16a34a') },
+      { label: 'Saídas previstas', data: serie.map(d => d.projSaidas), ...dashed('#dc2626') },
+    );
+  }
+
+  lineChart(canvas, serie.map(d => formatMonthShort(d.name)), datasets);
 }
 
 export function renderGoalsChart(data = buildMonthlyData(), labels) {
@@ -167,17 +191,26 @@ export function renderReserveDetailChart(reserveId) {
   const canvas = $('reserveDetailChart');
   if (!canvas || !isVisible(canvas.closest('.tab-content'))) return;
 
-  const data = buildMonthlyData();
-  const series = buildReserveCycleSeries(reserveId, data);
-  if (!series.some(s => s.crescimento > 0 || s.resgates > 0)) {
+  const serie = buildReserveFlowSeries(reserveId);
+  const temMovimento = serie.some(s => s.crescimento || s.resgates || s.projGuardar !== null);
+  if (!temMovimento) {
     showEmpty(canvas, 'Esta reserva ainda não tem movimentações.');
     return;
   }
 
-  lineChart(canvas, data.map(d => formatMonthShort(d.name)), [
-    { label: 'Guardado', data: series.map(s => s.crescimento), ...area('#16a34a') },
-    { label: 'Resgates', data: series.map(s => s.resgates), ...dashed('#ea580c') },
-  ]);
+  const temProjecao = serie.some(s => s.projGuardar !== null || s.projResgatar !== null);
+  const datasets = [
+    { label: 'Guardado', data: serie.map(s => s.crescimento), ...area('#16a34a') },
+    { label: 'Resgates', data: serie.map(s => s.resgates), ...linha('#ea580c') },
+  ];
+  if (temProjecao) {
+    datasets.push(
+      { label: 'Guardar previsto', data: serie.map(s => s.projGuardar), ...dashed('#16a34a') },
+      { label: 'Resgate previsto', data: serie.map(s => s.projResgatar), ...dashed('#ea580c') },
+    );
+  }
+
+  lineChart(canvas, serie.map(s => formatMonthShort(s.name)), datasets);
 }
 
 export function renderMonthFluxChart(monthData) {

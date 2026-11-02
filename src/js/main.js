@@ -14,7 +14,7 @@ import { api } from './api.js';
 import { ui } from './ui-state.js';
 import { renderAll } from './render.js';
 import { wireEvents } from './events.js';
-import { mostrarLogin, wireAuthForm } from './auth-ui.js';
+import { mostrarLogin, wireAuthForm, definirExigeConvite } from './auth-ui.js';
 import { iniciarPwa } from './pwa.js';
 
 async function carregarDemo() {
@@ -93,6 +93,7 @@ async function init() {
   try {
     const status = await api.status();
     ui.usuario = status.usuario;
+    definirExigeConvite(status.exigeConvite);
     if (status.autenticado) await abrirApp();
     else mostrarLogin();
   } catch (e) {

@@ -113,3 +113,59 @@ export function buildCategoryTotals(monthKey, type) {
     return { id: catId, name: cat ? cat.name : 'Sem categoria', color: cat ? cat.color : '#94a3b8', total: totals[catId] };
   }).sort((a, b) => b.total - a.total);
 }
+
+function projecaoDoCiclo(chave) {
+  return state.projecoes?.ciclos?.[chave] || null;
+}
+
+function projecaoDaReserva(reserveId, chave) {
+  return state.projecoes?.reservas?.[reserveId]?.[chave] || null;
+}
+
+function ciclosComProjecao(mapa) {
+  return Object.keys(mapa || {}).filter(chave => {
+    const p = mapa[chave];
+    return p && (Number(p.entradas) || Number(p.saidas) || Number(p.guardar) || Number(p.resgatar));
+  });
+}
+
+// Junta o que aconteceu com o que foi projetado. Ciclo sem dado real recebe
+// null em vez de zero: zero desenharia uma linha caindo ao chão no futuro,
+// como se nada tivesse entrado, quando na verdade ainda não aconteceu.
+export function buildFlowSeries() {
+  const reais = buildMonthlyData();
+  const porCiclo = Object.fromEntries(reais.map(c => [c.name, c]));
+  const chaves = [...new Set([...reais.map(c => c.name), ...ciclosComProjecao(state.projecoes?.ciclos)])].sort();
+
+  return chaves.map(chave => {
+    const real = porCiclo[chave];
+    const prev = projecaoDoCiclo(chave);
+    return {
+      name: chave,
+      entradas: real ? real.entradas : null,
+      gastos: real ? real.gastos : null,
+      projEntradas: prev ? Number(prev.entradas) || 0 : null,
+      projSaidas: prev ? Number(prev.saidas) || 0 : null,
+    };
+  });
+}
+
+export function buildReserveFlowSeries(reserveId) {
+  const reais = buildMonthlyData();
+  const movimento = buildReserveCycleSeries(reserveId, reais);
+  const porCiclo = Object.fromEntries(reais.map((c, i) => [c.name, movimento[i]]));
+  const mapa = state.projecoes?.reservas?.[reserveId];
+  const chaves = [...new Set([...reais.map(c => c.name), ...ciclosComProjecao(mapa)])].sort();
+
+  return chaves.map(chave => {
+    const real = porCiclo[chave];
+    const prev = projecaoDaReserva(reserveId, chave);
+    return {
+      name: chave,
+      crescimento: real ? real.crescimento : null,
+      resgates: real ? real.resgates : null,
+      projGuardar: prev ? Number(prev.guardar) || 0 : null,
+      projResgatar: prev ? Number(prev.resgatar) || 0 : null,
+    };
+  });
+}

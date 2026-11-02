@@ -43,7 +43,7 @@ router.get('/status', async (req, res, next) => {
       if (doc) usuario = { id: String(doc._id), username: doc.username };
     }
 
-    res.json({ autenticado: !!usuario, usuario });
+    res.json({ autenticado: !!usuario, usuario, exigeConvite: !!process.env.CODIGO_CONVITE });
   } catch (e) { next(e); }
 });
 
@@ -52,6 +52,14 @@ router.post('/register', async (req, res, next) => {
     const chave = `registro:${req.ip}`;
     if (excedeuTentativas(chave)) {
       return res.status(429).json({ erro: 'Muitas contas criadas daqui. Tente de novo mais tarde.' });
+    }
+
+    // Com CODIGO_CONVITE definido, o cadastro deixa de ser aberto. Sem a
+    // variável, segue aberto — é o comportamento de quem já está no ar.
+    const convite = process.env.CODIGO_CONVITE;
+    if (convite && req.body?.codigo !== convite) {
+      registrarTentativa(chave);
+      return res.status(403).json({ erro: 'Código de convite inválido' });
     }
 
     const usuario = normalizarUsuario(req.body?.username);

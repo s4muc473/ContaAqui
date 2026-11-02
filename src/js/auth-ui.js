@@ -3,7 +3,12 @@ import { api } from './api.js';
 import { ui } from './ui-state.js';
 
 let modoCriar = false;
+let exigeConvite = false;
 let aoEntrar = null;
+
+export function definirExigeConvite(valor) {
+  exigeConvite = !!valor;
+}
 
 export function wireAuthForm(callback) {
   aoEntrar = callback;
@@ -20,12 +25,14 @@ export function mostrarLogin({ criar = false, mensagem = '' } = {}) {
     : 'Acesse com seu usuário e senha.';
   $('authSubmit').textContent = criar ? 'Criar conta' : 'Entrar';
   $('authConfirmWrap').hidden = !criar;
+  $('authConviteWrap').hidden = !(criar && exigeConvite);
   $('authPass').setAttribute('autocomplete', criar ? 'new-password' : 'current-password');
   $('authTrocaTexto').textContent = criar ? 'Já tem conta?' : 'Ainda não tem conta?';
   $('authTrocaBtn').textContent = criar ? 'Entrar' : 'Criar conta';
 
   $('authPass').value = '';
   $('authPass2').value = '';
+  $('authConvite').value = '';
   mostrarErro(mensagem);
 
   $('app').hidden = true;
@@ -55,7 +62,7 @@ async function enviar(evento) {
   mostrarErro('');
   try {
     const resposta = modoCriar
-      ? await api.registrar(usuario, senha)
+      ? await api.registrar(usuario, senha, $('authConvite').value.trim())
       : await api.login(usuario, senha);
 
     ui.usuario = resposta.usuario;

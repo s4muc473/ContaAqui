@@ -1,6 +1,6 @@
 import { api } from './api.js';
 
-export const SCHEMA_VERSION = 3;
+export const SCHEMA_VERSION = 4;
 export const IS_DEMO = new URLSearchParams(location.search).has('demo');
 
 const STORAGE_KEY = IS_DEMO ? 'financeiro_data_demo' : 'financeiro_data';
@@ -18,6 +18,10 @@ export let state = {
 
 export function setState(next) {
   state = next;
+}
+
+export function projecoesVazias() {
+  return { ciclos: {}, reservas: {} };
 }
 
 export function newGoal() {
@@ -46,6 +50,7 @@ export function defaultState() {
       { id: 'cat-lazer', name: 'Lazer', type: 'EXPENSE', color: '#db2777' },
     ],
     cycleStartDay: 6,
+    projecoes: projecoesVazias(),
   };
 }
 
@@ -84,10 +89,16 @@ function migrateToV3(parsed) {
   delete parsed.budgets;
 }
 
+// v4 só acrescenta as projeções: nada existente muda de forma.
+function migrateToV4(parsed) {
+  parsed.projecoes = projecoesVazias();
+}
+
 export function migrateState(parsed) {
   const v = parsed.schemaVersion || 1;
   if (v < 2) migrateToV2(parsed);
   if (v < 3) migrateToV3(parsed);
+  if (v < 4) migrateToV4(parsed);
 
   const profile = parsed.profile || {};
   parsed.profile = {
@@ -100,6 +111,8 @@ export function migrateState(parsed) {
     goal: r.goal || newGoal(),
   }));
   parsed.categories = parsed.categories || [];
+  const proj = parsed.projecoes || {};
+  parsed.projecoes = { ciclos: proj.ciclos || {}, reservas: proj.reservas || {} };
   parsed.account = Number(parsed.account) || 0;
   parsed.cycleStartDay = parsed.cycleStartDay || 6;
   parsed.schemaVersion = SCHEMA_VERSION;

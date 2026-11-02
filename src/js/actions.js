@@ -246,3 +246,31 @@ export function applyImportedState(data) {
   showToast('Dados importados com sucesso!');
   return true;
 }
+
+// Projeção é planejamento: não encosta em saldo nenhum, só alimenta os gráficos.
+// Valor zerado some do mapa, para não guardar linha vazia à toa.
+function gravarProjecao(mapa, chave, valores) {
+  const limpo = Object.fromEntries(
+    Object.entries(valores).map(([k, v]) => [k, Math.max(0, Number(v) || 0)]),
+  );
+  if (Object.values(limpo).every(v => v === 0)) delete mapa[chave];
+  else mapa[chave] = limpo;
+}
+
+export function salvarProjecoesCiclo(linhas) {
+  const mapa = state.projecoes.ciclos;
+  linhas.forEach(({ ciclo, entradas, saidas }) => gravarProjecao(mapa, ciclo, { entradas, saidas }));
+  renderAll();
+  showToast('Projeções salvas!');
+  return true;
+}
+
+export function salvarProjecoesReserva(reserveId, linhas) {
+  if (!state.projecoes.reservas[reserveId]) state.projecoes.reservas[reserveId] = {};
+  const mapa = state.projecoes.reservas[reserveId];
+  linhas.forEach(({ ciclo, guardar, resgatar }) => gravarProjecao(mapa, ciclo, { guardar, resgatar }));
+  if (!Object.keys(mapa).length) delete state.projecoes.reservas[reserveId];
+  renderAll();
+  showToast('Projeções salvas!');
+  return true;
+}

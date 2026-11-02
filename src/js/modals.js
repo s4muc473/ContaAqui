@@ -1,6 +1,6 @@
 import { state } from './state.js';
 import { $, showToast, toISODateLocal, formatCurrency } from './utils.js';
-import { formatMonthLabel } from './cycle.js';
+import { formatMonthLabel, cicloAtual, ciclosAPartirDe } from './cycle.js';
 import { ui } from './ui-state.js';
 import { getCategoriesByType, getCategoryById, getReserveById } from './selectors.js';
 import { setDropdownOptions, getDropdownValue, close as closeDropdown } from './dropdown.js';
@@ -18,6 +18,8 @@ import {
   deleteReserve,
   saveGoal,
   addHistoricalAdjustment,
+  salvarProjecoesCiclo,
+  salvarProjecoesReserva,
 } from './actions.js';
 
 const TX_LABEL = {
@@ -254,5 +256,89 @@ export function addMesAdjustment() {
     $('mesAddAmount').value = '';
     $('mesAddDesc').value = '';
     setDropdownOptions('ddMesAddCategory', categoryOptions(ui.mesAddTipo), '');
+  }
+}
+
+/* ---------- projeções ---------- */
+
+let projContexto = null;
+
+const CAMPOS_FLUXO = [
+  { chave: 'entradas', rotulo: 'Entradas', tom: 'entrada' },
+  { chave: 'saidas', rotulo: 'Saídas', tom: 'saida' },
+];
+const CAMPOS_RESERVA = [
+  { chave: 'guardar', rotulo: 'Guardar', tom: 'entrada' },
+  { chave: 'resgatar', rotulo: 'Resgatar', tom: 'saida' },
+];
+
+export function abrirProjecaoFluxo() {
+  projContexto = { tipo: 'fluxo', campos: CAMPOS_FLUXO };
+  montarProjecao(
+    'Projeções do fluxo mensal',
+    'Planeje quanto espera que entre e saia em cada mês. Não altera saldo: só desenha as linhas previstas no gráfico.',
+    state.projecoes.ciclos,
+  );
+}
+
+export function abrirProjecaoReserva(reserveId) {
+  const reserva = getReserveById(reserveId);
+  if (!reserva) return;
+  projContexto = { tipo: 'reserva', reserveId, campos: CAMPOS_RESERVA };
+  montarProjecao(
+    `Projeções de ${reserva.name}`,
+    'Planeje quanto pretende guardar e resgatar em cada mês. A meta da reserva continua no botão Meta.',
+    state.projecoes.reservas[reserveId] || {},
+  );
+}
+
+function montarProjecao(titulo, sub, mapa) {
+  const atual = cicloAtual();
+  const base = ciclosAPartirDe(atual, 12);
+  const fora = Object.keys(mapa).filter(chave => !base.includes(chave));
+  const ciclos = [...new Set([...fora, ...base])].sort();
+
+  $('projTitulo').textContent = titulo;
+  $('projSub').textContent = sub;
+  $('projLista').innerHTML = ciclos.map(chave => {
+    const valores = mapa[chave] || {};
+    const passado = chave < atual;
+    return `
+      <div class="proj-linha${passado ? ' passado' : ''}">
+        <div class="proj-mes">
+          ${formatMonthLabel(chave)}
+          ${passado ? '<span class="proj-selo">já passou</span>' : ''}
+          ${chave === atual ? '<span class="proj-selo">ciclo atual</span>' : ''}
+        </div>
+        <div class="proj-campos">
+          ${projContexto.campos.map(campo => `
+            <label class="${campo.tom}">${campo.rotulo}
+              <input type="number" step="0.01" min="0" inputmode="decimal" placeholder="0,00"
+                data-ciclo="${chave}" data-campo="${campo.chave}"
+                value="${valores[campo.chave] || ''}">
+            </label>`).join('')}
+        </div>
+      </div>`;
+  }).join('');
+
+  openModal('modalProjecao');
+}
+
+export function salvarProjecao() {
+  const linhas = {};
+  $('projLista').querySelectorAll('input[data-ciclo]').forEach(input => {
+    const { ciclo, campo } = input.dataset;
+    if (!linhas[ciclo]) linhas[ciclo] = { ciclo };
+    linhas[ciclo][campo] = input.value;
+  });
+
+  const lista = Object.values(linhas);
+  const ok = projContexto.tipo === 'fluxo'
+    ? salvarProjecoesCiclo(lista)
+    : salvarProjecoesReserva(projContexto.reserveId, lista);
+
+  if (ok) {
+    closeModal('modalProjecao');
+    projContexto = null;
   }
 }

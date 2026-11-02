@@ -39,3 +39,17 @@ export function formatMonthShort(cycleKey) {
   const label = date.toLocaleString('pt-BR', { month: 'short' });
   return label.replace('.', '') + '/' + String(y).slice(2);
 }
+
+export function cicloAtual() {
+  return getFinancialCycle(new Date());
+}
+
+// Lista de ciclos a partir de um, andando para frente. Usada pelo editor de
+// projeções, que trabalha sobre meses futuros.
+export function ciclosAPartirDe(chaveInicial, quantidade) {
+  const [ano, mes] = chaveInicial.split('-').map(Number);
+  return Array.from({ length: quantidade }, (_, i) => {
+    const d = new Date(ano, mes - 1 + i, 1);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+  });
+}
