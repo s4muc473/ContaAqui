@@ -15,6 +15,7 @@ import { ui } from './ui-state.js';
 import { renderAll } from './render.js';
 import { wireEvents } from './events.js';
 import { mostrarLogin, wireAuthForm } from './auth-ui.js';
+import { iniciarPwa } from './pwa.js';
 
 async function carregarDemo() {
   const { buildDemoState } = await import('./demo-data.js');
@@ -79,6 +80,7 @@ async function init() {
   wireEvents();
   wireAuthForm(abrirApp);
   ligarIndicadorSync();
+  iniciarPwa();
 
   if (IS_DEMO) {
     if (!(await loadState())) setState(await carregarDemo());

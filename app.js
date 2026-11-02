@@ -32,6 +32,8 @@ app.use('/api', (req, res) => res.status(404).json({ erro: 'Rota não encontrada
 // Nada fora dessa lista sai do servidor, para não expor .env nem server/.
 const ARQUIVOS_PUBLICOS = new Set([
   '/index.html',
+  '/manifest.webmanifest',
+  '/sw.js',
   '/favicon.ico',
   '/favicon-16x16.png',
   '/favicon-32x32.png',

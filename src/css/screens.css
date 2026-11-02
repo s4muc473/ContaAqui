@@ -135,3 +135,18 @@
 }
 .mes-edit-acoes button:hover{background:var(--surface);color:var(--ink)}
 .mes-edit-vazio{padding:28px;text-align:center;color:var(--muted);font-size:13px}
+
+.pwa-box{
+  background:var(--sunk);border-radius:var(--radius);padding:16px;
+  display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+}
+.pwa-icone{
+  width:44px;height:44px;border-radius:50%;flex-shrink:0;
+  display:grid;place-items:center;font-size:18px;
+  background:var(--accent-soft);color:var(--accent-deep);
+}
+.pwa-info{flex:1;min-width:170px;display:flex;flex-direction:column;gap:3px}
+.pwa-info strong{font-size:14px}
+.pwa-info span{font-size:12.5px;color:var(--muted);line-height:1.45}
+.pwa-box .mk-btn{flex-shrink:0}
+.pwa-box .mk-btn[hidden]{display:none}

@@ -1,5 +1,6 @@
 import { state, gravarNoServidor } from './state.js';
 import { api } from './api.js';
+import { instalarApp } from './pwa.js';
 import { $, showToast } from './utils.js';
 import { ui } from './ui-state.js';
 import { showTab, setTabHooks } from './nav.js';
@@ -242,6 +243,11 @@ function wireData() {
   on('applyJsonBtn', 'click', () => {
     try { applyImportedState(JSON.parse($('jsonTextarea').value)); }
     catch (err) { showToast('Erro no JSON: ' + err.message); }
+  });
+
+  on('instalarAppBtn', 'click', async () => {
+    const aceitou = await instalarApp();
+    if (aceitou) showToast('App instalado!');
   });
 }
 

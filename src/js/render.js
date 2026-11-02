@@ -75,6 +75,9 @@ export function renderProfile() {
   root.setProperty('--accent', state.profile.color);
   root.setProperty('--accent-ink', readableInk(state.profile.color));
 
+  // A barra do sistema no Android segue a cor escolhida quando instalado.
+  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', state.profile.color);
+
   const avatar = $('avatarBtn');
   if (name) avatar.textContent = [...name][0].toUpperCase();
   else avatar.innerHTML = '<i class="fas fa-user"></i>';
