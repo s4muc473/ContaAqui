@@ -48,7 +48,7 @@ export function buildMonthlyData() {
     if (t.type === 'ENTRY') c.entradas += t.amount;
     else if (t.type === 'EXPENSE') c.gastos += t.amount;
     else if (t.type === 'ALLOCATION') c.crescimento += t.amount;
-    else if (t.type === 'RESERVE_RESCUE') c.resgates += t.amount;
+    else if (t.type === 'RESERVE_RESCUE') { c.resgates += t.amount; c.entradas += t.amount; }
   });
   Object.values(cycles).forEach(c => {
     c.saldo = c.entradas - c.gastos;

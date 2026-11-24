@@ -96,7 +96,7 @@ export function renderAccount() {
   const sum = type => state.transactions
     .filter(t => t.type === type && new Date(t.date) >= cycle.start && new Date(t.date) <= cycle.end)
     .reduce((acc, t) => acc + t.amount, 0);
-  $('totalEntries').textContent = formatCurrency(sum('ENTRY'));
+  $('totalEntries').textContent = formatCurrency(sum('ENTRY') + sum('RESERVE_RESCUE'));
   $('totalExpenses').textContent = formatCurrency(sum('EXPENSE'));
 }
 
